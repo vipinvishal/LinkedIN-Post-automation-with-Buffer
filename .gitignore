@@ -1,0 +1,11 @@
+.env
+.DS_Store
+__pycache__/
+*.pyc
+*.log
+logs/
+cards/
+pending/*.json
+.venv/
+venv/
+*.egg-info/
