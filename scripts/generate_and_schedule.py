@@ -327,6 +327,19 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
 # STEP 3 — Schedule to Buffer
 # ══════════════════════════════════════════════════════════════════════════════
 
+class BufferRateLimitError(Exception):
+    """Raised when Buffer API returns a rate limit error that cannot be retried within the run."""
+
+
+def _is_buffer_rate_limit(data: dict) -> bool:
+    """Return True if the Buffer GraphQL response indicates a rate limit error."""
+    errors = data.get("errors")
+    if not errors:
+        return False
+    raw = str(errors).lower()
+    return "rate_limit_exceeded" in raw or "too many requests" in raw
+
+
 def schedule_to_buffer(post_text: str) -> str:
     """Push the post to Buffer via GraphQL. Schedules 5 minutes from now."""
     print("[ Step 3 ] Scheduling to Buffer...")
@@ -355,36 +368,72 @@ def schedule_to_buffer(post_text: str) -> str:
     }
     """
 
-    response = requests.post(
-        "https://api.buffer.com",
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {BUFFER_API_KEY}",
-        },
-        json={
-            "query": mutation,
-            "variables": {
-                "text": post_text,
-                "channelId": BUFFER_CHANNEL_ID,
-                "dueAt": due_at,
+    for attempt in range(1, MAX_RETRIES + 1):
+        response = requests.post(
+            "https://api.buffer.com",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {BUFFER_API_KEY}",
             },
-        },
-        timeout=15,
-    )
+            json={
+                "query": mutation,
+                "variables": {
+                    "text": post_text,
+                    "channelId": BUFFER_CHANNEL_ID,
+                    "dueAt": due_at,
+                },
+            },
+            timeout=15,
+        )
 
-    data = response.json()
+        if response.status_code == 429:
+            retry_after = response.headers.get("Retry-After")
+            wait_seconds = int(retry_after) if retry_after and retry_after.isdigit() else RETRY_BASE_SECONDS * attempt
+            print(f"  Buffer HTTP 429 rate limit. Waiting {wait_seconds}s before retry {attempt}/{MAX_RETRIES}...")
+            if attempt == MAX_RETRIES:
+                raise BufferRateLimitError("Buffer rate limit (HTTP 429). The 15-minute window has not cleared.")
+            time.sleep(wait_seconds)
+            continue
 
-    if "errors" in data:
-        raise RuntimeError(f"Buffer API error: {data['errors']}")
+        try:
+            data = response.json()
+        except ValueError:
+            raise RuntimeError(f"Buffer API error: invalid JSON response (status {response.status_code})")
 
-    result = data.get("data", {}).get("createPost", {})
-    if "message" in result:
-        raise RuntimeError(f"Buffer mutation error: {result['message']}")
+        if _is_buffer_rate_limit(data):
+            errors = data.get("errors", [])
+            # Extract the window duration from extensions if available
+            window = "15m"
+            if isinstance(errors, list) and errors:
+                ext = errors[0].get("extensions", {})
+                window = ext.get("window", window)
+            print(f"  Buffer GraphQL rate limit (window: {window}), attempt {attempt}/{MAX_RETRIES}.")
+            if attempt < MAX_RETRIES:
+                wait_seconds = RETRY_BASE_SECONDS * attempt
+                print(f"  Waiting {wait_seconds}s before retry...")
+                time.sleep(wait_seconds)
+                continue
+            raise BufferRateLimitError(
+                f"Buffer rate limit exceeded (window: {window}). "
+                "Too many requests were made in a short period — likely from multiple workflow triggers. "
+                "The post will be skipped today and retried tomorrow."
+            )
 
-    post_id = result.get("post", {}).get("id", "unknown")
-    print(f"  Scheduled! Buffer Post ID: {post_id}")
-    print(f"  Publish time : {due_at}\n")
-    return post_id
+        if "errors" in data:
+            errors = data["errors"]
+            message = errors[0].get("message") if isinstance(errors, list) and errors else str(errors)
+            raise RuntimeError(f"Buffer API error: {message}")
+
+        result = data.get("data", {}).get("createPost", {})
+        if "message" in result:
+            raise RuntimeError(f"Buffer mutation error: {result['message']}")
+
+        post_id = result.get("post", {}).get("id", "unknown")
+        print(f"  Scheduled! Buffer Post ID: {post_id}")
+        print(f"  Publish time : {due_at}\n")
+        return post_id
+
+    raise RuntimeError("Buffer API error: exhausted retry attempts.")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -422,6 +471,14 @@ def main(preview: bool = False):
         print(f"  Done! Post queued in Buffer → will publish to X")
         print(f"  Buffer ID : {post_id}")
         print(f"{'='*60}\n")
+
+    except BufferRateLimitError as e:
+        # Buffer rate limit during a daily run — skip gracefully rather than failing the workflow.
+        # Retrying within the 15-minute window will not help, and the post is already missed for today.
+        print(f"\n  WARNING: {e}")
+        print(f"  Tip: avoid triggering the workflow manually and via schedule on the same day.")
+        print(f"  Exiting with code 0 — workflow will NOT be marked as failed.\n")
+        raise SystemExit(0)
 
     except Exception as e:
         print(f"\n  ERROR: {e}")
