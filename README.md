@@ -1,6 +1,6 @@
-# X Post Automation
+# LinkedIn Post Automation
 
-An AI agent that researches trending topics, generates viral posts, and publishes them to X (Twitter) automatically — every day at 10 AM IST.
+An AI agent that researches trending topics, generates engaging posts, and publishes them to LinkedIn automatically — every day at 10 AM IST.
 
 **No VPS needed. No manual work. Fully automated via GitHub Actions.**
 
@@ -13,10 +13,10 @@ GitHub Actions (10 AM IST daily)
         ↓
 Exa — neural web research on a random AI/tech topic
         ↓
-Gemini — generates a viral, first-person post (280 chars)
+Gemini — generates a viral, first-person post
   └─ fallback: Gemini key #2 → Euron API
         ↓
-Buffer — schedules and publishes to @YourHandle on X
+Buffer — schedules and publishes to your LinkedIn profile
 ```
 
 ---
@@ -29,7 +29,7 @@ Buffer — schedules and publishes to @YourHandle on X
 | **Exa** | Real-time neural web research |
 | **Google Gemini** | Post generation (dual-key with quota rotation) |
 | **Euron API** | Fallback when all Gemini keys are exhausted |
-| **Buffer** | Schedules and publishes posts to X |
+| **Buffer** | Schedules and publishes posts to LinkedIn |
 
 ---
 
@@ -38,8 +38,8 @@ Buffer — schedules and publishes to @YourHandle on X
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/vipinvishal/X-Post-Automation.git
-cd X-Post-Automation
+git clone https://github.com/vipinvishal/LinkedIN-Post-automation-with-Buffer.git
+cd LinkedIN-Post-automation-with-Buffer
 ```
 
 ### 2. Create a virtual environment and install dependencies
@@ -90,7 +90,7 @@ Add these to your `.env` file:
 python scripts/get_buffer_channel.py
 ```
 
-Copy the ID for your X (Twitter) channel and paste it into `.env` as `BUFFER_CHANNEL_ID`.
+Copy the ID for your LinkedIn channel and paste it into `.env` as `BUFFER_CHANNEL_ID`.
 
 ---
 
@@ -112,7 +112,7 @@ Go to **Settings → Secrets and variables → Actions → New repository secret
 The workflow is defined in `.github/workflows/daily_post.yml` and triggers every day at **10:00 AM IST (04:30 UTC)**.
 
 You can also trigger it manually anytime:
-**GitHub repo → Actions → Daily X Post → Run workflow**
+**GitHub repo → Actions → Daily LinkedIn Post → Run workflow**
 
 ---
 

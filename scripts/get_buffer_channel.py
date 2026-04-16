@@ -1,5 +1,5 @@
 """
-Run this once to find your Buffer Channel ID for X (Twitter).
+Run this once to find your Buffer Channel ID for LinkedIn.
 Usage: python scripts/get_buffer_channel.py
 """
 import os
@@ -38,7 +38,7 @@ if "errors" in data:
 
 channels = data.get("data", {}).get("account", {}).get("channels", [])
 if not channels:
-    raise SystemExit("No channels found. Make sure your X account is connected in Buffer.")
+    raise SystemExit("No channels found. Make sure your LinkedIn account is connected in Buffer.")
 
 print("\nYour Buffer Channels:")
 print("─" * 50)

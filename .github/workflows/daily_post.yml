@@ -1,4 +1,4 @@
-name: Daily X Post
+name: Daily LinkedIn Post
 
 on:
   schedule:

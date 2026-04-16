@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-X Post Agent
-Pipeline: Exa (research) → Gemini (generate viral post) → Buffer (schedule to X)
+LinkedIn Post Agent
+Pipeline: Exa (research) → Gemini (generate viral post) → Buffer (schedule to LinkedIn)
 
 Run locally : python scripts/generate_and_schedule.py
-GitHub Actions triggers this automatically every day at 9 AM IST.
+GitHub Actions triggers this automatically every day at 10 AM IST.
 """
 
 import os
@@ -51,14 +51,14 @@ TONES   = _config["tones"]
 # ══════════════════════════════════════════════════════════════════════════════
 
 SYSTEM_PROMPT = """
-You are a ghost-writer for a technical AI founder on X (Twitter).
+You are a ghost-writer for a technical AI founder on LinkedIn.
 You write like someone who has actually shipped AI products — raw, specific, opinionated.
 You know that specificity beats inspiration, one sharp sentence beats a paragraph, and
 the audience (AI founders, ML engineers, CTOs) can spot generic AI hype instantly.
 """.strip()
 
 VIRAL_POST_PROMPT = """
-You are writing for an X account in the AI/tech space.
+You are writing for a LinkedIn profile in the AI/tech space.
 The audience is: AI founders, ML engineers, technical builders, AI enthusiasts, CTOs.
 The goal: maximum views, comments, likes — leading to audience monetization.
 
@@ -102,7 +102,7 @@ Framework D — The Prediction / Hot Take:
   [Question that sparks debate]
 
 ━━━ RULES ━━━
-✓ Max 280 characters TOTAL
+✓ Max 3000 characters TOTAL
 ✓ Line 1 MUST hook — contrarian, surprising, or provocative
 ✓ Every line break must earn its place — no filler lines
 ✓ Use specific technical terms (LLM, RAG, fine-tuning, inference, etc.) — the audience is technical
@@ -293,14 +293,14 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
     post = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', post)
     post = post.strip()
 
-    # If over 280 chars, ask the model to shorten it (max 2 attempts)
+    # If over 3000 chars, ask the model to shorten it (max 2 attempts)
     for shorten_attempt in range(2):
-        if len(post) <= 280:
+        if len(post) <= 3000:
             break
         print(f"  Post is {len(post)} chars — asking model to shorten (attempt {shorten_attempt + 1}/2)...")
         shorten_prompt = (
-            f"This X (Twitter) post is {len(post)} characters, which is over the 280-character limit.\n\n"
-            f"Shorten it to strictly under 275 characters while keeping the same structure, voice, and impact.\n"
+            f"This LinkedIn post is {len(post)} characters, which is over the 3000-character limit.\n\n"
+            f"Shorten it to strictly under 2950 characters while keeping the same structure, voice, and impact.\n"
             f"Keep the hook, the story, the lesson, and the question. Cut filler words, not ideas.\n"
             f"Plain text only — no markdown, no hashtags.\n\n"
             f"Original post:\n{post}\n\n"
@@ -315,9 +315,9 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
     for line in post.split("\n"):
         print(f"  {line}")
     print(f"  {'─'*50}")
-    print(f"  Character count: {len(post)}/280\n")
+    print(f"  Character count: {len(post)}/3000\n")
 
-    if len(post) > 280:
+    if len(post) > 3000:
         raise ValueError(f"Post still too long ({len(post)} chars) after shortening attempts.")
 
     return post
@@ -445,7 +445,7 @@ def main(preview: bool = False):
     tone  = random.choice(TONES)
 
     print(f"\n{'='*60}")
-    print(f"  X Post Agent — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
+    print(f"  LinkedIn Post Agent — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
     if preview:
         print(f"  MODE: PREVIEW (no Buffer scheduling)")
     print(f"{'='*60}")
@@ -468,7 +468,7 @@ def main(preview: bool = False):
         post_id = schedule_to_buffer(post)
 
         print(f"{'='*60}")
-        print(f"  Done! Post queued in Buffer → will publish to X")
+        print(f"  Done! Post queued in Buffer → will publish to LinkedIn")
         print(f"  Buffer ID : {post_id}")
         print(f"{'='*60}\n")
 
