@@ -35,6 +35,14 @@ GEMINI_FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-001"]
 MAX_RETRIES            = 4
 RETRY_BASE_SECONDS     = 15
 
+# ── Platform character limits ─────────────────────────────────────────────────
+PLATFORM_CHAR_LIMITS = {
+    "linkedin": 3000,
+    "twitter":  280,
+    "x":        280,
+}
+PLATFORM = "linkedin"  # this pipeline posts to LinkedIn only
+
 # ── Load topics config ────────────────────────────────────────────────────────
 _script_dir = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(_script_dir, "topics.json"), "r") as f:
@@ -264,6 +272,37 @@ def research_topic(topic: str, niche: str) -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# CHARACTER LIMIT HELPERS
+# ══════════════════════════════════════════════════════════════════════════════
+
+def validate_post_length(content: str, platform: str = PLATFORM) -> bool:
+    """Raise ValueError if content exceeds the platform character limit."""
+    limit = PLATFORM_CHAR_LIMITS.get(platform.lower(), 3000)
+    if len(content) > limit:
+        raise ValueError(
+            f"{platform.capitalize()} posts cannot exceed {limit} characters. "
+            f"Current length: {len(content)} characters."
+        )
+    return True
+
+
+def truncate_for_platform(content: str, platform: str = PLATFORM) -> str:
+    """Hard-truncate content to fit the platform limit (last-resort fallback)."""
+    limit = PLATFORM_CHAR_LIMITS.get(platform.lower(), 3000)
+    if len(content) <= limit:
+        return content
+    # Cut at the last sentence boundary within the limit
+    truncated = content[:limit - 3]
+    last_period = truncated.rfind(".")
+    if last_period > limit // 2:
+        truncated = truncated[:last_period + 1]
+    else:
+        truncated = truncated.rstrip() + "..."
+    print(f"  [truncate] Hard-truncated to {len(truncated)} chars for {platform}.")
+    return truncated
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # STEP 2 — Generate Viral Post with Gemini
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -287,20 +326,22 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
     if post.startswith("'") and post.endswith("'"):
         post = post[1:-1].strip()
 
-    # Strip markdown formatting (X doesn't render it — shows as literal asterisks)
+    # Strip markdown formatting (LinkedIn renders plain text — asterisks show as literals)
     import re as _re
     post = _re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', post)
     post = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', post)
     post = post.strip()
 
-    # If over 3000 chars, ask the model to shorten it (max 2 attempts)
+    limit = PLATFORM_CHAR_LIMITS[PLATFORM]
+
+    # If over limit, ask the model to shorten it (max 2 attempts)
     for shorten_attempt in range(2):
-        if len(post) <= 3000:
+        if len(post) <= limit:
             break
         print(f"  Post is {len(post)} chars — asking model to shorten (attempt {shorten_attempt + 1}/2)...")
         shorten_prompt = (
-            f"This LinkedIn post is {len(post)} characters, which is over the 3000-character limit.\n\n"
-            f"Shorten it to strictly under 2950 characters while keeping the same structure, voice, and impact.\n"
+            f"This LinkedIn post is {len(post)} characters, which is over the {limit}-character limit.\n\n"
+            f"Shorten it to strictly under {limit - 50} characters while keeping the same structure, voice, and impact.\n"
             f"Keep the hook, the story, the lesson, and the question. Cut filler words, not ideas.\n"
             f"Plain text only — no markdown, no hashtags.\n\n"
             f"Original post:\n{post}\n\n"
@@ -311,15 +352,18 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
         post = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', post)
         post = post.strip()
 
+    # Last-resort: hard truncate at sentence boundary rather than failing the run
+    if len(post) > limit:
+        print(f"  AI shortening did not converge — applying hard truncation.")
+        post = truncate_for_platform(post, PLATFORM)
+
     print(f"\n  Generated post:\n  {'─'*50}")
     for line in post.split("\n"):
         print(f"  {line}")
     print(f"  {'─'*50}")
-    print(f"  Character count: {len(post)}/3000\n")
+    print(f"  Character count: {len(post)}/{limit}\n")
 
-    if len(post) > 3000:
-        raise ValueError(f"Post still too long ({len(post)} chars) after shortening attempts.")
-
+    validate_post_length(post, PLATFORM)
     return post
 
 
@@ -465,6 +509,7 @@ def main(preview: bool = False):
             print(f"{'='*60}\n")
             return
 
+        validate_post_length(post, PLATFORM)
         post_id = schedule_to_buffer(post)
 
         print(f"{'='*60}")
