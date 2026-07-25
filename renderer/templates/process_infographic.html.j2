@@ -10,12 +10,12 @@
 
   :root {
     --paper:  #fbfaf7;
-    --ink:    #17181c;
-    --blue:   #2f6fed;
-    --amber:  #e2933c;
+    --ink:    #121317;
+    --blue:   #2557f5;
+    --amber:  #e8821c;
     --slate:  #6b7280;
     --line:   #e4e2db;
-    --mockbg: #1b1f2a;
+    --mockbg: #14171f;
   }
 
   .page {
@@ -29,29 +29,32 @@
   .content { position: absolute; left: 64px; top: 0; right: 64px; bottom: 0; }
 
   /* ── header ── */
-  .eyebrow { position: absolute; left: 0; top: 40px; display: flex; align-items: center; gap: 10px; }
-  .eyebrow-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--blue); }
+  .eyebrow {
+    position: absolute; left: 0; top: 36px; display: flex; align-items: center; gap: 9px;
+    background: var(--ink); border-radius: 20px; padding: 7px 16px 7px 12px; width: fit-content;
+  }
+  .eyebrow-dot { width: 9px; height: 9px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80; }
   .eyebrow span {
-    font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 19px;
-    color: var(--blue); letter-spacing: 0.5px;
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 18px;
+    color: #ffffff; letter-spacing: 0.6px;
   }
   .corner-mark {
-    position: absolute; right: 0; top: 36px;
+    position: absolute; right: 0; top: 32px;
     font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 20px;
-    color: var(--slate); border: 1.5px solid var(--line); border-radius: 8px;
+    color: var(--slate); border: 2px solid var(--ink); border-radius: 8px;
     padding: 8px 14px;
   }
 
-  .title-block { position: absolute; left: 0; top: 78px; width: 800px; }
+  .title-block { position: absolute; left: 0; top: 90px; width: 820px; }
   .h-line {
-    font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 62px;
-    line-height: 1.06; letter-spacing: -0.5px;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 72px;
+    line-height: 1.04; letter-spacing: -1px;
   }
   .h-line.l1 { color: var(--ink); }
-  .h-line.l2 { color: var(--blue); }
+  .h-line.l2 { color: var(--blue); text-shadow: 3px 3px 0 rgba(37,87,245,0.18); }
   .tagline {
-    font-family: 'Inter', sans-serif; font-weight: 500; font-size: 22px;
-    color: var(--slate); margin-top: 14px;
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 23px;
+    color: var(--slate); margin-top: 16px;
   }
 
   .hr { position: absolute; left: 0; width: 952px; height: 1px; background: var(--line); }
@@ -59,12 +62,13 @@
   /* ── top mockup row ── */
   .stage { position: absolute; }
   .stage-label {
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 21px;
-    margin-bottom: 10px;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 22px;
+    margin-bottom: 11px;
   }
   .mockwin {
     width: 100%; height: 168px; background: var(--mockbg); border-radius: 12px;
-    padding: 14px 16px; box-shadow: 5px 6px 0 rgba(0,0,0,0.10);
+    padding: 14px 16px; box-shadow: 7px 8px 0 rgba(0,0,0,0.16);
+    border-top: 4px solid var(--c);
   }
   .mockwin .dots { display: flex; gap: 6px; margin-bottom: 14px; }
   .mockwin .dot { width: 10px; height: 10px; border-radius: 50%; }
@@ -72,42 +76,43 @@
   .mockwin .dot.y { background: #ffbd2e; }
   .mockwin .dot.g { background: #27c93f; }
   .mockwin .snippet {
-    font-family: 'JetBrains Mono', monospace; font-size: 18px; line-height: 1.5;
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 18px; line-height: 1.5;
   }
   .mockwin.editor .snippet { color: #8ecbff; }
   .mockwin.terminal .snippet { color: #4ade80; }
   .mockwin.chip { display: flex; align-items: center; justify-content: center; flex-direction: column; }
-  .mockwin.chip svg { width: 62px; height: 62px; }
+  .mockwin.chip svg { width: 64px; height: 64px; }
   .mockwin.chip .snippet { color: var(--amber); margin-top: 10px; font-size: 15px; text-align: center; }
 
   .stage-arrow { position: absolute; }
 
   /* ── numbered step cards ── */
   .card {
-    position: absolute; border: 4px solid var(--c); border-radius: 18px;
+    position: absolute; border: 5px solid var(--c); border-radius: 18px;
     background: #ffffff; padding: 20px 22px 16px;
-    box-shadow: 6px 7px 0 rgba(23,24,28,0.08);
+    box-shadow: 8px 9px 0 rgba(23,24,28,0.10);
   }
   .card.c1 { --c: var(--blue); }
   .card.c2 { --c: var(--amber); }
   .card.c3 { --c: var(--blue); }
   .card.c4 { --c: var(--amber); }
   .card-badge {
-    position: absolute; top: -18px; left: -18px; width: 38px; height: 38px;
-    border-radius: 50%; background: var(--c); border: 3px solid var(--ink);
+    position: absolute; top: -22px; left: -22px; width: 46px; height: 46px;
+    border-radius: 50%; background: var(--c); border: 3.5px solid var(--ink);
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; color: #fff;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 23px; color: #fff;
+    box-shadow: 3px 4px 0 rgba(23,24,28,0.22);
   }
   .card-title {
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 27px;
-    color: var(--ink); margin-bottom: 10px;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 28px;
+    color: var(--ink); margin-bottom: 11px; letter-spacing: -0.2px;
   }
   .card-pts { list-style: none; }
   .card-pts li {
-    font-family: 'Inter', sans-serif; font-weight: 500; font-size: 20px; color: #3a3d44;
-    line-height: 1.5; padding-left: 18px; position: relative;
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; color: #2a2d33;
+    line-height: 1.5; padding-left: 19px; position: relative;
   }
-  .card-pts li::before { content: "•"; color: var(--c); font-weight: 700; position: absolute; left: 0; }
+  .card-pts li::before { content: "•"; color: var(--c); font-weight: 800; position: absolute; left: 0; font-size: 22px; }
 
   /* ── bottom flow strips ── */
   .flow-block { position: absolute; left: 0; width: 660px; }
@@ -117,25 +122,25 @@
   }
   .flow-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
   .flow-chip {
-    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 15px; color: var(--ink);
-    border: 2px solid var(--line); border-radius: 8px; background: #ffffff;
-    padding: 7px 11px; white-space: nowrap;
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 15px; color: var(--ink);
+    border: 2.5px solid var(--ink); border-radius: 8px; background: #ffffff;
+    padding: 7px 11px; white-space: nowrap; box-shadow: 2px 3px 0 rgba(23,24,28,0.10);
   }
-  .flow-arrow { color: var(--slate); font-size: 16px; }
+  .flow-arrow { color: var(--ink); font-size: 16px; font-weight: 700; }
 
   /* ── sticky note ── */
   .sticky {
     position: absolute; right: 0; width: 250px;
-    background: #fbe27a; border: 3px solid var(--ink); border-radius: 4px;
+    background: #ffd94a; border: 3px solid var(--ink); border-radius: 4px;
     transform: rotate(3deg); padding: 22px 18px 14px;
-    box-shadow: 5px 7px 0 rgba(0,0,0,0.14);
+    box-shadow: 7px 9px 0 rgba(0,0,0,0.18);
   }
   .sticky-pin {
     position: absolute; left: 50%; top: -12px; transform: translateX(-50%);
-    width: 20px; height: 20px; border-radius: 50%; background: #d63b3b; border: 2px solid var(--ink);
+    width: 20px; height: 20px; border-radius: 50%; background: #e83b3b; border: 2px solid var(--ink);
   }
   .sticky-text {
-    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; color: var(--ink); line-height: 1.4;
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 20px; color: var(--ink); line-height: 1.4;
   }
 
   /* ── footer ── */
@@ -143,7 +148,7 @@
     position: absolute; left: 0; width: 952px;
     display: flex; align-items: center; justify-content: center;
   }
-  .footer-tag { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 19px; color: var(--slate); }
+  .footer-tag { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 19px; color: var(--slate); }
 </style>
 </head>
 <body>
@@ -164,7 +169,7 @@
     <!-- Top mockup row: 3 stages (input / process / output), fixed kinds -->
     <div class="stage" id="stage0" style="left:0px;width:290px">
       <div class="stage-label" style="color:var(--blue)">{{ stages[0].label }}</div>
-      <div class="mockwin editor">
+      <div class="mockwin editor" style="--c:var(--blue)">
         <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
         <div class="snippet">{{ stages[0].snippet }}</div>
       </div>
@@ -172,8 +177,8 @@
 
     <div class="stage" id="stage1" style="left:331px;width:290px">
       <div class="stage-label" style="color:var(--amber)">{{ stages[1].label }}</div>
-      <div class="mockwin chip">
-        <svg viewBox="0 0 30 30" fill="none" stroke="#e2933c" stroke-width="2.2" stroke-linecap="round">
+      <div class="mockwin chip" style="--c:var(--amber)">
+        <svg viewBox="0 0 30 30" fill="none" stroke="#e8821c" stroke-width="2.2" stroke-linecap="round">
           <rect x="8" y="8" width="14" height="14" rx="2"/>
           <line x1="12" y1="2" x2="12" y2="8"/><line x1="18" y1="2" x2="18" y2="8"/>
           <line x1="12" y1="22" x2="12" y2="28"/><line x1="18" y1="22" x2="18" y2="28"/>
@@ -186,7 +191,7 @@
 
     <div class="stage" id="stage2" style="left:662px;width:290px">
       <div class="stage-label" style="color:var(--blue)">{{ stages[2].label }}</div>
-      <div class="mockwin terminal">
+      <div class="mockwin terminal" style="--c:var(--blue)">
         <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
         <div class="snippet">{{ stages[2].snippet }}</div>
       </div>
@@ -196,7 +201,7 @@
          width="952" height="560">
       <defs>
         <marker id="sarr" markerWidth="12" markerHeight="8" refX="9" refY="4" orient="auto">
-          <polygon points="0 0.5, 11 4, 0 7.5" fill="#17181c"/>
+          <polygon points="0 0.5, 11 4, 0 7.5" fill="#121317"/>
         </marker>
       </defs>
     </svg>
@@ -307,7 +312,7 @@ window.drawInfographic = function() {
     var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', x1); line.setAttribute('y1', y1);
     line.setAttribute('x2', x2); line.setAttribute('y2', y2);
-    line.setAttribute('stroke', '#17181c'); line.setAttribute('stroke-width', '2.6');
+    line.setAttribute('stroke', '#121317'); line.setAttribute('stroke-width', '3.2');
     line.setAttribute('marker-end', 'url(#sarr)');
     svg.appendChild(line);
   }

@@ -40,8 +40,10 @@ def _draw(page) -> None:
     page.evaluate("window.drawInfographic && window.drawInfographic()")
 
 
-def render(content: dict, out_path: str, template: str = TEMPLATE) -> str:
-    """Render content dict → PNG using the given template. Returns out_path string."""
+def render(content: dict, out_path: str, template: str = TEMPLATE, scale: int = 3) -> str:
+    """Render content dict → PNG using the given template. Returns out_path string.
+    scale is the device pixel ratio Playwright renders at — 3x on a 1080-wide canvas
+    yields a ~3240px-wide export, crisp even at LinkedIn's full-screen tap-to-expand view."""
     from playwright.sync_api import sync_playwright
 
     html = _build_html(content, template)
@@ -61,7 +63,7 @@ def render(content: dict, out_path: str, template: str = TEMPLATE) -> str:
             browser = p.chromium.launch()
             page = browser.new_page(
                 viewport={"width": width, "height": height},
-                device_scale_factor=1,
+                device_scale_factor=scale,
             )
             page.goto(f"file://{tmp_html}")
             page.wait_for_load_state("networkidle")   # waits for Google Fonts
