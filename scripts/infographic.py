@@ -2,9 +2,9 @@
 Infographic generator for LinkedIn posts.
 
 Pipeline:
-  generate_content()  → Gemini → 5-step content dict
-  render_infographic()  → Playwright → PNG
-  upload_to_linkedin()  → LinkedIn media API → asset URN
+  generate_process_content()  → Gemini → "how it works" content dict
+  render_infographic()        → Playwright → PNG
+  upload_to_linkedin()        → LinkedIn media API → asset URN
 """
 
 import os
@@ -12,47 +12,6 @@ import re
 import json
 import pathlib
 import requests
-
-_CONTENT_PROMPT = """
-Generate content for a dark-mode, high-contrast LinkedIn infographic breaking an AI/tech topic into
-a clear 5-step sequential mental model (STEP 1 → STEP 2 → STEP 3 → STEP 4 → STEP 5, read top to bottom).
-This is for an individual engineer's personal learning post — technical, precise, no business framing.
-Write for someone scrolling fast on mobile: the headline must stop the scroll, and each step must be
-understandable in under 2 seconds.
-
-Topic: {topic}
-
-The LinkedIn post this infographic will accompany (the infographic MUST illustrate the SAME narrative —
-same problem, same solution/technique, same specific claims. Do not introduce a different angle, a
-different solution, or new facts not present in this post):
-{post_text}
-
-STRICT RULES:
-- box1..box5 : five sequential steps that walk through the SAME story as the post above (its problem →
-  its solution → its key points), step 1 is the simplest entry point, step 5 is the payoff / end state.
-  If the post lists specific features/bullets for its solution, box2-5 should reflect those specific
-  points rather than inventing new ones.
-- All box labels : 1–2 words, ALL CAPS (e.g. "RETRIEVAL", "LATENCY", "GPU MEMORY")
-- All box points : exactly 3 items, max 3 words each — short tag-like phrases, plain text (no markdown)
-- title_line1 : a short, punchy, curiosity-driving hook phrase (3-5 words) matching the post's hook,
-  NOT the raw topic name. Should read like a scroll-stopping headline, e.g. "WHY YOUR RAG" not
-  "Retrieval Augmented Generation".
-- title_line2 : the payoff / rest of the hook (3-5 words), ALL CAPS, completes the headline from line1.
-- hook : one short punchy sentence (max 14 words) — the same core takeaway as the post's closing thought.
-  Written like a terminal code comment. Plain text, not ALL CAPS.
-
-Return ONLY valid JSON — no markdown, no explanation:
-{{
-  "title_line1": "...",
-  "title_line2": "...",
-  "hook": "...",
-  "box1": {{"label": "...", "points": ["...", "...", "..."]}},
-  "box2": {{"label": "...", "points": ["...", "...", "..."]}},
-  "box3": {{"label": "...", "points": ["...", "...", "..."]}},
-  "box4": {{"label": "...", "points": ["...", "...", "..."]}},
-  "box5": {{"label": "...", "points": ["...", "...", "..."]}}
-}}
-""".strip()
 
 _PROCESS_CONTENT_PROMPT = """
 Generate content for a light-theme, detailed "how it works" LinkedIn infographic that breaks a topic down
@@ -125,37 +84,6 @@ def _clean_text(s: str) -> str:
     return s.strip()
 
 
-def _clean_content(data: dict) -> dict:
-    data["title_line1"] = _clean_text(data["title_line1"])
-    data["title_line2"] = _clean_text(data["title_line2"])
-    data["hook"] = _clean_text(data["hook"])
-    for key in ["box1", "box2", "box3", "box4", "box5"]:
-        data[key]["label"] = _clean_text(data[key]["label"])
-        data[key]["points"] = [_clean_text(p) for p in data[key]["points"]]
-    return data
-
-
-def generate_content(topic: str, post_text: str, generate_text_fn) -> dict:
-    """Call the LLM to produce the 5-node infographic content dict, grounded in the actual post text."""
-    prompt = _CONTENT_PROMPT.format(topic=topic, post_text=post_text[:2500])
-
-    for attempt in range(2):
-        raw = generate_text_fn(prompt, _SYSTEM)
-        raw = raw.strip()
-        raw = re.sub(r'^```(?:json)?\s*', '', raw)
-        raw = re.sub(r'\s*```$', '', raw)
-        raw = raw.strip()
-        try:
-            data = json.loads(raw)
-            required = ["title_line1", "title_line2", "hook", "box1", "box2", "box3", "box4", "box5"]
-            if all(k in data for k in required):
-                return _clean_content(data)
-        except (json.JSONDecodeError, KeyError):
-            pass
-
-    raise RuntimeError("Failed to generate valid infographic JSON after 2 attempts.")
-
-
 def _clean_process_content(data: dict) -> dict:
     data["title_line1"] = _clean_text(data["title_line1"])
     data["title_line2"] = _clean_text(data["title_line2"])
@@ -194,7 +122,7 @@ def generate_process_content(topic: str, post_text: str, generate_text_fn) -> di
     raise RuntimeError("Failed to generate valid process-infographic JSON after 2 attempts.")
 
 
-def render_infographic(content: dict, out_path: str, template: str = "infographic.html.j2") -> str:
+def render_infographic(content: dict, out_path: str, template: str = "process_infographic.html.j2") -> str:
     """Render the content dict to a PNG using Playwright. Returns PNG path."""
     import sys
     root = pathlib.Path(__file__).parent.parent

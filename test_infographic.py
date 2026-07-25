@@ -7,7 +7,7 @@ Usage:
   python test_infographic.py
   python test_infographic.py "RAG systems in production"
 """
-import os, sys, subprocess
+import sys, subprocess
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -32,11 +32,14 @@ def main():
     print(f"\nTopic : {TOPIC}")
     print("Generating infographic content via Gemini...\n")
 
-    content = ig.generate_content(TOPIC, SAMPLE_POST_TEXT, generate_text)
+    content = ig.generate_process_content(TOPIC, SAMPLE_POST_TEXT, generate_text)
 
     print(f"  title : {content['title_line1']} / {content['title_line2']}")
-    for k in ["box1", "box2", "box3", "box4", "box5"]:
-        print(f"  {k}   : [{content[k]['label']}] {content[k]['points']}")
+    print(f"  tagline: {content['tagline']}")
+    for i, stage in enumerate(content["stages"]):
+        print(f"  stage{i}  : [{stage['label']}] {stage['snippet']}")
+    for i, step in enumerate(content["steps"]):
+        print(f"  step{i}   : [{step['label']}] {step['points']}")
 
     print("\nRendering PNG...")
     ig.render_infographic(content, OUT)

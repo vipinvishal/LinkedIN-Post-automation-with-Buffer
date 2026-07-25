@@ -10,21 +10,17 @@ Usage (module):
     png_path = render(content_dict, "renderer/output/infographic.png")
 """
 import sys
-import json
 import pathlib
 import tempfile
 
 from jinja2 import Environment, FileSystemLoader
 
 ROOT      = pathlib.Path(__file__).parent
-TEMPLATE  = "infographic.html.j2"
-SAMPLE    = ROOT / "data" / "sample_content.json"
+TEMPLATE  = "process_infographic.html.j2"
 OUTPUT    = ROOT / "output" / "infographic.png"
 
-# Each template declares its own canvas size; default matches LinkedIn's
-# recommended 1080x1350 (4:5). The process template is taller (more sections).
+# Canvas size for the (currently only) template.
 _CANVAS_SIZES = {
-    "infographic.html.j2":         (1080, 1350),
     "process_infographic.html.j2": (1080, 1330),
 }
 
@@ -83,18 +79,24 @@ def render(content: dict, out_path: str, template: str = TEMPLATE, scale: int = 
 
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else str(OUTPUT)
-    if SAMPLE.exists():
-        sample = json.loads(SAMPLE.read_text())
-    else:
-        sample = {
-            "title_line1": "Why Your Agent",
-            "title_line2": "Breaks In Prod",
-            "hook": "demos never see concurrent load or a missing fallback path.",
-            "box1": {"label": "THE DEMO",     "points": ["static input", "happy path", "controlled data"]},
-            "box2": {"label": "REAL TRAFFIC", "points": ["dynamic input", "edge cases", "concurrent load"]},
-            "box3": {"label": "ROOT CAUSE",   "points": ["no validation", "brittle logic", "no fallback"]},
-            "box4": {"label": "THE GAP",      "points": ["false confidence", "silent failure", "no guardrails"]},
-            "box5": {"label": "THE FIX",      "points": ["guardrails", "observability", "retry logic"]},
-        }
+    sample = {
+        "title_line1": "Why Your Agent",
+        "title_line2": "Breaks In Prod",
+        "tagline": "From clean demo to production reality.",
+        "hook": "demos never see concurrent load or a missing fallback path.",
+        "stages": [
+            {"label": "The Demo", "snippet": "status: ok"},
+            {"label": "Real Traffic", "snippet": "load += 10x"},
+            {"label": "It Breaks", "snippet": "ERROR: timeout"},
+        ],
+        "steps": [
+            {"label": "The Demo", "points": ["Static input", "Happy path", "Controlled data"]},
+            {"label": "Real Traffic", "points": ["Dynamic input", "Edge cases", "Concurrent load"]},
+            {"label": "Root Cause", "points": ["No validation", "Brittle logic", "No fallback"]},
+            {"label": "The Fix", "points": ["Guardrails", "Observability", "Retry logic"]},
+        ],
+        "flow_a_items": ["Demo", "Real Traffic", "No Validation", "Silent Failure", "Guardrails", "Stable"],
+        "flow_b_items": ["Works Alone", "Breaks Live", "Add Guardrails", "Works Live"],
+    }
     render(sample, out)
     print(f"Saved to {out}")
