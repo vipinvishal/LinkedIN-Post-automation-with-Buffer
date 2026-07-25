@@ -55,29 +55,38 @@ Return ONLY valid JSON — no markdown, no explanation:
 """.strip()
 
 _PROCESS_CONTENT_PROMPT = """
-Generate content for a light-theme, detailed "how it works" LinkedIn infographic that walks through a
-step-by-step AI/tech mechanism (like a diagram explaining how a process runs end to end). This is for an
-individual engineer's personal learning post — technical, precise, no business framing.
+Generate content for a light-theme, detailed "how it works" LinkedIn infographic that breaks a topic down
+into a clear beginning → middle → end arc, illustrated like a step-by-step technical diagram. This is for
+an individual engineer's personal learning post — technical, precise, no business framing.
 
 Topic: {topic}
 
 The LinkedIn post this infographic will accompany (the infographic MUST illustrate the SAME narrative —
-same mechanism, same specific claims. Do not introduce facts not present in this post):
+same claims, same specifics. Do not introduce facts not present in this post):
 {post_text}
 
-This infographic has THREE sections. All of it must walk through the SAME mechanism, at increasing detail:
+First, read the post and identify its natural 3-part arc — use whichever framing actually fits:
+- If it's a technical mechanism: INPUT → PROCESS → OUTPUT (e.g. "You Write Code" → "Model Predicts" →
+  "Token Sampled")
+- If it's a problem/solution post: THE PROBLEM → THE FIX → THE RESULT
+- If it's a personal story or news reaction: BEFORE → THE MOMENT IT CHANGED → AFTER
+Pick whichever of these actually matches the post — don't force a mechanism onto a post that doesn't have one.
 
-1. "stages" — exactly 3 items representing INPUT → PROCESS → OUTPUT for this mechanism. Each has:
-   - "label": 2-3 words, Title Case (e.g. "You Write Code", "Model Predicts", "Token Sampled")
-   - "snippet": a short fake code/terminal/data line (max 22 characters) that visually represents that
-     stage — e.g. for input: 'print("hello")', for process: '01001 → 01110', for output: '> Hello!'
+This infographic has THREE sections. All of it must walk through that SAME 3-part arc, at increasing detail:
 
-2. "steps" — exactly 4 numbered cards walking through the mechanism in more detail than "stages" (step 1
-   is the simplest entry point, step 4 is the payoff/end state). Each has:
+1. "stages" — exactly 3 items for the 3-part arc identified above. Each has:
+   - "label": 2-3 words, Title Case
+   - "snippet": a short fake code/terminal/data line (max 22 characters) that represents that stage —
+     e.g. 'print("hello")', '01001 → 01110', '> Hello!', 'retry_count = 3', 'status: FAILED'. Even for a
+     personal/news story, phrase the stage as a short code- or log-line-flavored fragment (it's a visual
+     device, not literal code) — e.g. for "the bug appeared": 'ERROR: null ptr'.
+
+2. "steps" — exactly 4 numbered cards walking through the arc in more detail than "stages" (step 1 is the
+   simplest entry point, step 4 is the payoff/end state). Each has:
    - "label": 2-4 words, Title Case
    - "points": exactly 3 short tag-like phrases, max 3 words each, plain text
 
-3. Two flow summaries of the SAME mechanism at different granularities:
+3. Two flow summaries of the SAME arc at different granularities:
    - "flow_a_items": 5-6 short words/phrases (1-2 words each) — the detailed/granular pipeline
    - "flow_b_items": 4-5 short words/phrases (1-2 words each) — the simplified big-picture version
 
