@@ -495,7 +495,187 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# STEP 2.5 — Generate & render infographic (optional, graceful fallback)
+# STEP 2.5 — Humanize (rewrite so it reads like a real person, not an AI)
+# ══════════════════════════════════════════════════════════════════════════════
+
+HUMANIZE_SYSTEM_PROMPT = """
+You are an expert human editor.
+
+Your job is to rewrite the text below so it sounds like it was written by a real, thoughtful human — NOT by an AI.
+
+IMPORTANT:
+Do not merely replace words with synonyms. Rewrite the thinking, rhythm, sentence structure, and flow.
+
+### REMOVE AI SLOP
+
+Aggressively remove:
+
+* Generic introductions
+* "In today's fast-paced world..."
+* "In the ever-evolving landscape..."
+* "It's important to note that..."
+* "Whether you're a beginner or an expert..."
+* "Let's dive in..."
+* "Here's the thing..."
+* "The key takeaway is..."
+* "At the end of the day..."
+* "This isn't just X, it's Y"
+* "Not only X, but also Y"
+* Fake enthusiasm
+* Corporate/LinkedIn language
+* Unnecessary motivational language
+* Repetitive conclusions
+* Obvious summaries of what was just said
+* Excessive headings
+* Excessive bullet points
+* Artificial transitions
+* Overuse of em dashes
+* Overly polished sentences
+* Needless adjectives and adverbs
+* Repetitive sentence patterns
+* "Furthermore", "Moreover", "Additionally", "However" when they aren't genuinely needed
+* Generic claims such as "This can revolutionize..."
+* Empty phrases that sound impressive but say nothing
+
+### MAKE IT SOUND HUMAN
+
+Use:
+
+* Natural sentence lengths
+* Short sentences mixed with longer ones
+* Contractions where appropriate
+* Casual phrasing when the context allows it
+* Specific examples instead of vague claims
+* Opinions when the original writer clearly has one
+* Natural transitions
+* Slight imperfections in rhythm
+* Direct language
+* Concrete words
+* A conversational tone
+* Personality without forcing jokes
+* Confidence without sounding like a marketing brochure
+
+Don't make every sentence perfectly structured.
+
+Real people don't write like textbooks.
+
+### PRESERVE THE ORIGINAL THINKING
+
+Do NOT:
+
+* Change the meaning
+* Invent facts
+* Add information that wasn't there
+* Remove important technical details
+* Change numbers, names, examples, or claims
+* Turn a simple explanation into something complicated
+* Make the writing unnecessarily informal
+
+Keep the author's actual ideas.
+
+Improve how those ideas are expressed.
+
+### IMPORTANT RULE
+
+Don't try to "sound human" by deliberately adding mistakes.
+
+No fake typos.
+
+No unnecessary slang.
+
+No forced humor.
+
+No random "honestly", "literally", "basically", etc.
+
+Human writing comes from natural thought and clear expression — not manufactured imperfections.
+
+### STYLE TEST
+
+Before returning the final version, ask yourself:
+
+"If I saw this on the internet, would I immediately think an AI generated it?"
+
+If the answer is yes, rewrite it again.
+
+Then ask:
+
+"Does this sound like one specific person actually had something to say?"
+
+If not, rewrite it again.
+
+### PLATFORM CONSTRAINTS (do not break these)
+
+* Plain text only — no markdown formatting (no *, no _, no # headings).
+* If you keep any list-style lines, prefix each with "→ " — never "*" or "-" — LinkedIn renders
+  those as literal characters, not formatting.
+* Do not add hashtags.
+* Do not spell out any URL or domain name.
+
+### FINAL OUTPUT
+
+Return ONLY the rewritten content.
+
+Do not explain what you changed.
+
+Do not mention AI detection.
+
+Do not mention this prompt.
+""".strip()
+
+
+def humanize_post(post_text: str) -> str:
+    """Run the generated post through a human-editor rewrite pass so it reads like one
+    specific person wrote it, not an AI. Preserves meaning/facts — only rewrites phrasing,
+    rhythm, and sentence structure."""
+    import re as _re
+
+    print("[ Step 2.5 ] Humanizing post...")
+    rewritten = generate_text(post_text, HUMANIZE_SYSTEM_PROMPT).strip()
+
+    # Strip markdown fences/formatting the rewrite might reintroduce
+    rewritten = _re.sub(r'^```(?:\w+)?\s*', '', rewritten)
+    rewritten = _re.sub(r'\s*```$', '', rewritten)
+    rewritten = _re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', rewritten)
+    rewritten = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', rewritten)
+    rewritten = _re.sub(r'^\s*\*\s+', '→ ', rewritten, flags=_re.MULTILINE)
+    rewritten = rewritten.strip()
+
+    limit = PLATFORM_CHAR_LIMITS[PLATFORM]
+
+    # If the rewrite pushed it over the limit, ask the model to trim (same pattern as generate_post)
+    for shorten_attempt in range(2):
+        if len(rewritten) <= limit:
+            break
+        print(f"  Humanized post is {len(rewritten)} chars — asking model to shorten (attempt {shorten_attempt + 1}/2)...")
+        shorten_prompt = (
+            f"This LinkedIn post is {len(rewritten)} characters, over the {limit}-character limit.\n\n"
+            f"Shorten it to strictly under {limit - 50} characters while keeping the same voice, "
+            f"ideas, and specific details. Cut filler, not substance.\n"
+            f"Plain text only — no markdown.\n\n"
+            f"Original post:\n{rewritten}\n\n"
+            f"Output ONLY the shortened post text. Nothing else."
+        )
+        rewritten = generate_text(shorten_prompt, HUMANIZE_SYSTEM_PROMPT)
+        rewritten = _re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', rewritten)
+        rewritten = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', rewritten)
+        rewritten = rewritten.strip()
+
+    if len(rewritten) > limit:
+        print("  Humanized shortening did not converge — applying hard truncation.")
+        rewritten = truncate_for_platform(rewritten, PLATFORM)
+
+    print(f"\n  Humanized post:\n  {'─'*50}")
+    for line in rewritten.split("\n"):
+        print(f"  {line}")
+    print(f"  {'─'*50}")
+    print(f"  Characters : {len(rewritten)}/{limit}\n")
+
+    validate_post_length(rewritten, PLATFORM)
+    return rewritten
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STEP 2.6 — Generate & render infographic (optional, graceful fallback)
 # ══════════════════════════════════════════════════════════════════════════════
 
 INCLUDE_INFOGRAPHIC = os.environ.get("INCLUDE_INFOGRAPHIC", "1") == "1"
@@ -518,7 +698,7 @@ def build_infographic(topic: str, post_text: str) -> str | None:
         print("  [infographic] skipped — scripts.infographic not importable.")
         return None
 
-    print("[ Step 2.5 ] Generating infographic (synced to post, template: process/how-it-works)...")
+    print("[ Step 2.6 ] Generating infographic (synced to post, template: process/how-it-works)...")
     try:
         content = ig.generate_process_content(topic, post_text, generate_text)
         png     = ig.render_infographic(content, _PNG_PATH, template="process_infographic.html.j2")
@@ -679,7 +859,8 @@ def main(preview: bool = False):
 
     try:
         research = research_topic(topic, NICHE)
-        post     = generate_post(topic, tone, NICHE, PERSONA, research)
+        draft    = generate_post(topic, tone, NICHE, PERSONA, research)
+        post     = humanize_post(draft)
         png_path = build_infographic(topic, post)
 
         if preview:
