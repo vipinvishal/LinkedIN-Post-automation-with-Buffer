@@ -34,8 +34,8 @@ EXA_API_KEY           = os.environ.get("EXA_API_KEY")
 LINKEDIN_ACCESS_TOKEN = os.environ.get("LINKEDIN_ACCESS_TOKEN")
 LINKEDIN_PERSON_ID    = os.environ.get("LINKEDIN_PERSON_ID")
 
-GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
-GEMINI_FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-001"]
+GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
+GEMINI_FALLBACK_MODELS = ["gemini-flash-latest", "gemini-3.6-flash", "gemini-2.5-flash"]
 MAX_RETRIES            = 4
 RETRY_BASE_SECONDS     = 15
 
@@ -240,6 +240,11 @@ def _is_daily_quota_exhausted(error: Exception) -> bool:
     return "PerDay" in s or "GenerateRequestsPerDay" in s or ("limit: 0" in s and "429" in s)
 
 
+def _is_model_not_found(error: Exception) -> bool:
+    s = str(error)
+    return "404" in s and ("NOT_FOUND" in s or "not found" in s.lower())
+
+
 def _call_euron(prompt: str, system_instruction: str) -> str:
     if not EURON_API_KEY:
         raise RuntimeError("EURON_API_KEY not set.")
@@ -251,7 +256,7 @@ def _call_euron(prompt: str, system_instruction: str) -> str:
         resp = requests.post(
             "https://api.euron.one/api/v1/euri/chat/completions",
             headers={"Authorization": f"Bearer {EURON_API_KEY}", "Content-Type": "application/json"},
-            json={"model": "gemini-2.0-flash", "messages": messages},
+            json={"model": "gemini-3.6-flash", "messages": messages},
             timeout=90,
         )
         if resp.status_code == 429:
@@ -288,6 +293,10 @@ def generate_text(prompt: str, system_instruction: str) -> str:
                     print(f"  [Gemini] Success with {model_id} on {key_label}")
                     return response.text.strip()
                 except Exception as e:
+                    if _is_model_not_found(e):
+                        last_error = e
+                        print(f"  [Gemini] {model_id} not found/retired on {key_label}. Trying next model.")
+                        break
                     if _is_quota_error(e) or _is_retryable_server_error(e):
                         last_error = e
                         if _is_daily_quota_exhausted(e):
