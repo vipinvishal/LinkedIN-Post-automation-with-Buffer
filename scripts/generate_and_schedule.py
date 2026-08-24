@@ -60,7 +60,6 @@ with open(os.path.join(_script_dir, "topics.json"), "r") as f:
 
 NICHE  = _config["niche"]
 PERSONA = _config["persona"]
-PORTFOLIO_URL = _config.get("portfolio_url", "")
 _slot   = _config["content_slots"][CONTENT_SLOT]
 SLOT_LABEL = _slot["label"]
 TOPICS     = _slot["topics"]
@@ -122,9 +121,7 @@ Follow this exact structure:
 6. Leave readers with a closing thought — one sharp, memorable line that reframes how they should think
    about this problem going forward.
 7. Encourage readers to follow your profile for more content like this — one short, natural line (not
-   salesy). Then on its own line, add a short portfolio mention — describe it accurately as a portfolio
-   of your work/projects, e.g. "See what I've been building → link in the comments." Never spell out the
-   actual URL or domain name in the post text itself.
+   salesy).
 
 ━━━ WRITING RULES ━━━
 - Voice: first-person, one individual ENGINEER sharing what they ran into and figured out — NEVER "we",
@@ -148,7 +145,12 @@ Return ONLY valid JSON — no prose, no markdown fences, no explanation before o
   "viral_score": <1-10 overall viral potential>,
   "image_recommended": <true or false>,
   "image_type": "<infographic|meme|carousel|chart|none>",
-  "image_prompt": "<detailed prompt for generating the image, or empty string if none>"
+  "image_prompt": "<detailed prompt for generating the image, or empty string if none>",
+  "first_comment": "<a short, punchy comment (1-2 sentences) that YOU, the author, would drop as the
+    first reply right after posting this — a quick hot take on the topic above, or a direct, specific
+    invite for people to share their own experience/opinion in the comments. Plain text, no hashtags,
+    no links, no markdown, no generic 'thoughts?' filler — it must clearly connect to what this
+    particular post said.>"
 }}
 """.strip()
 
@@ -179,10 +181,7 @@ Follow this exact structure:
    "*" shows up as a stray character instead of a bullet.
 6. End with one line on how game-changing this capability is — grounded and specific, not hype for
    hype's sake.
-7. Conclude with a line that invites the audience into the comments — a sharp, specific question. Then
-   on its own line, add a short portfolio mention — describe it accurately as a portfolio of your
-   work/projects, e.g. "See what I've been building → link in the comments." Never spell out the actual
-   URL or domain name in the post text itself.
+7. Conclude with a line that invites the audience into the comments — a sharp, specific question.
 
 ━━━ WRITING RULES ━━━
 - Voice: first-person, one individual ENGINEER, not a senior architect or expert lecturing from authority
@@ -207,7 +206,12 @@ Return ONLY valid JSON — no prose, no markdown fences, no explanation before o
   "viral_score": <1-10 overall viral potential>,
   "image_recommended": <true or false>,
   "image_type": "<infographic|meme|carousel|chart|none>",
-  "image_prompt": "<detailed prompt for generating the image, or empty string if none>"
+  "image_prompt": "<detailed prompt for generating the image, or empty string if none>",
+  "first_comment": "<a short, punchy comment (1-2 sentences) that YOU, the author, would drop as the
+    first reply right after posting this — a quick hot take on the topic above, or a direct, specific
+    invite for people to share their own experience/opinion in the comments. Plain text, no hashtags,
+    no links, no markdown, no generic 'thoughts?' filler — it must clearly connect to what this
+    particular post said.>"
 }}
 """.strip()
 
@@ -400,8 +404,9 @@ def truncate_for_platform(content: str, platform: str = PLATFORM) -> str:
 # STEP 2 — Generate Viral Post with Gemini
 # ══════════════════════════════════════════════════════════════════════════════
 
-def generate_post(topic: str, tone: str, niche: str, persona: str, research: str) -> str:
-    """Call Gemini with the viral post prompt + research brief, parse JSON response."""
+def generate_post(topic: str, tone: str, niche: str, persona: str, research: str) -> tuple[str, str]:
+    """Call Gemini with the viral post prompt + research brief, parse JSON response.
+    Returns (post_text, first_comment)."""
     import re as _re
     import json as _json
 
@@ -432,13 +437,15 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
     hook_score = viral_score = "?"
     image_type = "none"
     image_prompt = ""
+    first_comment = f"Curious how others are handling this — what's your take on {topic.lower()}?"
     try:
         parsed = _json.loads(raw)
         post = parsed["post_text"].strip()
-        hook_score   = parsed.get("hook_score", "?")
-        viral_score  = parsed.get("viral_score", "?")
-        image_type   = parsed.get("image_type", "none")
-        image_prompt = parsed.get("image_prompt", "")
+        hook_score    = parsed.get("hook_score", "?")
+        viral_score   = parsed.get("viral_score", "?")
+        image_type    = parsed.get("image_type", "none")
+        image_prompt  = parsed.get("image_prompt", "")
+        first_comment = parsed.get("first_comment", "").strip() or first_comment
     except (_json.JSONDecodeError, KeyError):
         # Model likely emitted an unescaped quote inside post_text, breaking strict JSON.
         # Recover just the post_text field via regex instead of dumping raw JSON as the post.
@@ -456,6 +463,9 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
     post = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', post)
     post = _re.sub(r'^\s*\*\s+', '→ ', post, flags=_re.MULTILINE)  # stray "* " bullet → arrow
     post = post.strip()
+
+    first_comment = _re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', first_comment)
+    first_comment = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', first_comment).strip()
 
     limit = PLATFORM_CHAR_LIMITS[PLATFORM]
 
@@ -488,10 +498,11 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
     print(f"  {'─'*50}")
     print(f"  Hook score : {hook_score}/10  |  Viral score : {viral_score}/10")
     print(f"  Image      : {image_type}" + (f" — {image_prompt[:80]}..." if image_prompt else ""))
-    print(f"  Characters : {len(post)}/{limit}\n")
+    print(f"  Characters : {len(post)}/{limit}")
+    print(f"  1st comment: {first_comment}\n")
 
     validate_post_length(post, PLATFORM)
-    return post
+    return post, first_comment
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -797,22 +808,20 @@ def post_to_linkedin(post_text: str, image_urn: str = None) -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# STEP 4 — Drop the portfolio link as the first comment
+# STEP 4 — Drop a punchy first comment to seed engagement
 # ══════════════════════════════════════════════════════════════════════════════
-# Kept out of the post body on purpose: LinkedIn's feed algorithm suppresses
-# reach on posts with an outbound link, but not on comments.
+# Kept as a separate comment (rather than baked into the post) so it reads as
+# the author's own reply — a common tactic to kickstart replies on the post.
 
-def post_portfolio_comment(post_id: str) -> None:
-    """Add a comment with the portfolio link to the just-published post. Non-fatal on failure."""
-    if not PORTFOLIO_URL:
+def post_engagement_comment(post_id: str, comment_text: str) -> None:
+    """Add the author's own first comment to the just-published post. Non-fatal on failure."""
+    if not comment_text:
         return
 
-    print("[ Step 4 ] Dropping portfolio link as first comment...")
+    print("[ Step 4 ] Dropping first comment to seed engagement...")
 
     share_urn = post_id if post_id.startswith("urn:") else f"urn:li:ugcPost:{post_id}"
     encoded_urn = requests.utils.quote(share_urn, safe="")
-
-    comment_text = f"See what I've been building → {PORTFOLIO_URL}"
 
     response = requests.post(
         f"https://api.linkedin.com/v2/socialActions/{encoded_urn}/comments",
@@ -835,7 +844,7 @@ def post_portfolio_comment(post_id: str) -> None:
             err = response.json()
         except ValueError:
             err = response.text
-        print(f"  [warn] Could not post portfolio comment ({response.status_code}): {err}\n")
+        print(f"  [warn] Could not post first comment ({response.status_code}): {err}\n")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -859,13 +868,12 @@ def main(preview: bool = False):
 
     try:
         research = research_topic(topic, NICHE)
-        draft    = generate_post(topic, tone, NICHE, PERSONA, research)
+        draft, first_comment = generate_post(topic, tone, NICHE, PERSONA, research)
         post     = humanize_post(draft)
         png_path = build_infographic(topic, post)
 
         if preview:
-            if PORTFOLIO_URL:
-                print(f"  Would comment: See what I've been building → {PORTFOLIO_URL}\n")
+            print(f"  Would comment: {first_comment}\n")
             print(f"{'='*60}")
             print(f"  PREVIEW ONLY — post NOT published to LinkedIn.")
             if png_path:
@@ -885,7 +893,7 @@ def main(preview: bool = False):
                 print(f"  [infographic] WARNING: upload failed ({exc}) — posting text-only.\n")
 
         post_id = post_to_linkedin(post, image_urn=image_urn)
-        post_portfolio_comment(post_id)
+        post_engagement_comment(post_id, first_comment)
 
         print(f"{'='*60}")
         print(f"  Done! Post published directly to LinkedIn.")
