@@ -51,14 +51,26 @@ This infographic has THREE sections. All of it must walk through that SAME 3-par
 
 Also:
 - title_line1 : a short, punchy, curiosity-driving hook phrase (3-5 words) matching the post's hook,
-  Title Case, NOT the raw topic name.
-- title_line2 : the payoff / rest of the hook (3-5 words), Title Case, completes line1.
-- tagline : one short descriptive line (under 10 words), e.g. "From typing code to seeing the output."
-- hook : one short punchy sentence (max 20 words) — the same core takeaway as the post's closing thought.
+  Title Case, NOT the raw topic name. Favor a bold, opinionated framing over a neutral description —
+  a contrast/reveal structure works well when it genuinely fits (e.g. "X Isn't One Thing." / "It's Y."
+  split across line1/line2), but don't force it if the post's actual angle is something else.
+- title_line2 : the payoff / rest of the hook (3-5 words), Title Case, completes line1. This is the line
+  that should stop a scroll — make it hit harder than line1, not just continue it politely.
+- tagline : one short, sharp line (under 10 words) that sets up the breakdown — specific, not generic
+  ("From typing code to seeing the output" beats "How it works").
+- hook : one short, punchy, quotable sentence (max 20 words) — the same core takeaway as the post's
+  closing thought, phrased so it reads well standalone (this is the line people screenshot).
+- section_label : a short (2-4 words), all-caps, punchy label naming what this specific breakdown is
+  (e.g. "UNDER THE HOOD", "HOW IT ACTUALLY WORKS", "THE REAL BREAKDOWN") — specific to this topic, not
+  a generic placeholder.
+
+None of these five should sound like a textbook caption. Write them like a sharp engineer trying to
+make someone stop scrolling and actually read the post — direct, a little provocative, zero filler
+words ("comprehensive", "seamless", "revolutionize", "unlock").
 
 Return ONLY valid JSON — no markdown, no explanation:
 {{
-  "title_line1": "...", "title_line2": "...", "tagline": "...", "hook": "...",
+  "title_line1": "...", "title_line2": "...", "tagline": "...", "hook": "...", "section_label": "...",
   "stages": [{{"label": "...", "snippet": "..."}}, {{"label": "...", "snippet": "..."}}, {{"label": "...", "snippet": "..."}}],
   "steps": [
     {{"label": "...", "points": ["...", "...", "..."]}},
@@ -89,6 +101,7 @@ def _clean_process_content(data: dict) -> dict:
     data["title_line2"] = _clean_text(data["title_line2"])
     data["tagline"] = _clean_text(data["tagline"])
     data["hook"] = _clean_text(data["hook"])
+    data["section_label"] = _clean_text(data.get("section_label", "")).upper() or "HOW IT ACTUALLY WORKS"
     for stage in data["stages"]:
         stage["label"] = _clean_text(stage["label"])
         stage["snippet"] = _clean_text(stage["snippet"])

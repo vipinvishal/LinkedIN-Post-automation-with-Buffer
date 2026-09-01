@@ -21,7 +21,7 @@ OUTPUT    = ROOT / "output" / "infographic.png"
 
 # Canvas size for the (currently only) template.
 _CANVAS_SIZES = {
-    "process_infographic.html.j2": (1080, 1330),
+    "process_infographic.html.j2": (1080, 1410),
 }
 
 
@@ -84,6 +84,7 @@ if __name__ == "__main__":
         "title_line2": "Breaks In Prod",
         "tagline": "From clean demo to production reality.",
         "hook": "demos never see concurrent load or a missing fallback path.",
+        "section_label": "WHERE IT ACTUALLY BREAKS",
         "stages": [
             {"label": "The Demo", "snippet": "status: ok"},
             {"label": "Real Traffic", "snippet": "load += 10x"},

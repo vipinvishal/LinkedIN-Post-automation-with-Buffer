@@ -3,23 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { width: 1080px; overflow: hidden; }
 
   :root {
-    --paper:  #fbfaf7;
-    --ink:    #121317;
-    --blue:   #2557f5;
-    --amber:  #e8821c;
-    --slate:  #6b7280;
-    --line:   #e4e2db;
-    --mockbg: #14171f;
+    --paper:   #fbfaf7;
+    --ink:     #121317;
+    --accent:  #6d28d9;  /* punchy violet — primary accent (headline, badge 1, eyebrow) */
+    --amber:   #e8821c;  /* badge 2 */
+    --green:   #16a34a;  /* badge 3 */
+    --magenta: #db2777;  /* badge 4 */
+    --slate:   #6b7280;
+    --line:    #e4e2db;
+    --mockbg:  #14171f;
   }
 
   .page {
-    width: 1080px; height: 1330px;
+    width: 1080px; height: 1410px;
     background: var(--paper);
     position: relative; overflow: hidden;
     font-family: 'Inter', sans-serif;
@@ -31,27 +33,28 @@
   /* ── header ── */
   .eyebrow {
     position: absolute; left: 0; top: 36px; display: flex; align-items: center; gap: 9px;
-    background: var(--ink); border-radius: 20px; padding: 7px 16px 7px 12px; width: fit-content;
+    background: #ffffff; border: 2.5px solid var(--accent); border-radius: 999px;
+    padding: 8px 20px 8px 16px; width: fit-content;
   }
-  .eyebrow-dot { width: 9px; height: 9px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+  .eyebrow-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
   .eyebrow span {
-    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 18px;
-    color: #ffffff; letter-spacing: 0.6px;
+    font-family: 'Inter', sans-serif; font-weight: 800; font-size: 17px;
+    color: var(--accent); letter-spacing: 0.4px;
   }
   .corner-mark {
     position: absolute; right: 0; top: 32px;
     font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 20px;
-    color: var(--slate); border: 2px solid var(--ink); border-radius: 8px;
-    padding: 8px 14px;
+    color: #ffffff; background: var(--accent); border-radius: 10px;
+    padding: 9px 15px;
   }
 
   .title-block { position: absolute; left: 0; top: 90px; width: 820px; }
   .h-line {
-    font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 72px;
-    line-height: 1.04; letter-spacing: -1px;
+    font-family: 'Archivo Black', 'Space Grotesk', sans-serif; font-weight: 400; font-size: 66px;
+    line-height: 1.08; letter-spacing: -0.5px;
   }
   .h-line.l1 { color: var(--ink); }
-  .h-line.l2 { color: var(--blue); text-shadow: 3px 3px 0 rgba(37,87,245,0.18); }
+  .h-line.l2 { color: var(--accent); text-shadow: 3px 3px 0 rgba(109,40,217,0.18); }
   .tagline {
     font-family: 'Inter', sans-serif; font-weight: 600; font-size: 23px;
     color: var(--slate); margin-top: 16px;
@@ -59,10 +62,18 @@
 
   .hr { position: absolute; left: 0; width: 952px; height: 1px; background: var(--line); }
 
+  /* ── section rule (centered flanked label, Euron-style) ── */
+  .section-rule { position: absolute; left: 0; width: 952px; display: flex; align-items: center; gap: 16px; }
+  .section-rule .rule-line { flex: 1; height: 2px; background: var(--accent); opacity: 0.3; }
+  .section-rule .rule-text {
+    font-family: 'Inter', sans-serif; font-weight: 800; font-size: 19px;
+    letter-spacing: 1.5px; color: var(--accent); white-space: nowrap;
+  }
+
   /* ── top mockup row ── */
   .stage { position: absolute; }
   .stage-label {
-    font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 22px;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px;
     margin-bottom: 11px;
   }
   .mockwin {
@@ -78,7 +89,7 @@
   .mockwin .snippet {
     font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 18px; line-height: 1.5;
   }
-  .mockwin.editor .snippet { color: #8ecbff; }
+  .mockwin.editor .snippet { color: #c4b5fd; }
   .mockwin.terminal .snippet { color: #4ade80; }
   .mockwin.chip { display: flex; align-items: center; justify-content: center; flex-direction: column; }
   .mockwin.chip svg { width: 64px; height: 64px; }
@@ -92,33 +103,37 @@
     background: #ffffff; padding: 20px 22px 16px;
     box-shadow: 8px 9px 0 rgba(23,24,28,0.10);
   }
-  .card.c1 { --c: var(--blue); }
+  .card.c1 { --c: var(--accent); }
   .card.c2 { --c: var(--amber); }
-  .card.c3 { --c: var(--blue); }
-  .card.c4 { --c: var(--amber); }
+  .card.c3 { --c: var(--green); }
+  .card.c4 { --c: var(--magenta); }
   .card-badge {
     position: absolute; top: -22px; left: -22px; width: 46px; height: 46px;
     border-radius: 50%; background: var(--c); border: 3.5px solid var(--ink);
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 23px; color: #fff;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 23px; color: #fff;
     box-shadow: 3px 4px 0 rgba(23,24,28,0.22);
   }
   .card-title {
-    font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 28px;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 28px;
     color: var(--ink); margin-bottom: 11px; letter-spacing: -0.2px;
   }
   .card-pts { list-style: none; }
   .card-pts li {
     font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; color: #2a2d33;
-    line-height: 1.5; padding-left: 19px; position: relative;
+    line-height: 1.5; padding-left: 30px; position: relative; margin-bottom: 4px;
   }
-  .card-pts li::before { content: "•"; color: var(--c); font-weight: 800; position: absolute; left: 0; font-size: 22px; }
+  .card-pts li::before {
+    content: "✓"; position: absolute; left: 0; top: 3px; width: 19px; height: 19px;
+    border-radius: 50%; background: var(--c); color: #fff;
+    font-size: 12px; font-weight: 800; line-height: 19px; text-align: center;
+  }
 
   /* ── bottom flow strips ── */
   .flow-block { position: absolute; left: 0; width: 660px; }
   .flow-label {
     font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 16px;
-    color: var(--blue); letter-spacing: 0.5px; margin-bottom: 10px;
+    color: var(--accent); letter-spacing: 0.5px; margin-bottom: 10px;
   }
   .flow-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
   .flow-chip {
@@ -166,10 +181,14 @@
 
     <div class="hr" id="hr1"></div>
 
+    <div class="section-rule" id="sectionRule">
+      <span class="rule-line"></span><span class="rule-text">{{ section_label }}</span><span class="rule-line"></span>
+    </div>
+
     <!-- Top mockup row: 3 stages (input / process / output), fixed kinds -->
     <div class="stage" id="stage0" style="left:0px;width:290px">
-      <div class="stage-label" style="color:var(--blue)">{{ stages[0].label }}</div>
-      <div class="mockwin editor" style="--c:var(--blue)">
+      <div class="stage-label" style="color:var(--accent)">{{ stages[0].label }}</div>
+      <div class="mockwin editor" style="--c:var(--accent)">
         <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
         <div class="snippet">{{ stages[0].snippet }}</div>
       </div>
@@ -190,8 +209,8 @@
     </div>
 
     <div class="stage" id="stage2" style="left:662px;width:290px">
-      <div class="stage-label" style="color:var(--blue)">{{ stages[2].label }}</div>
-      <div class="mockwin terminal" style="--c:var(--blue)">
+      <div class="stage-label" style="color:var(--accent)">{{ stages[2].label }}</div>
+      <div class="mockwin terminal" style="--c:var(--accent)">
         <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
         <div class="snippet">{{ stages[2].snippet }}</div>
       </div>
@@ -294,7 +313,12 @@ window.drawInfographic = function() {
   var hr1 = document.getElementById('hr1');
   hr1.style.top = (titleBottom + 26) + 'px';
 
-  var stageTop = titleBottom + 26 + 40;
+  var sectionRule = document.getElementById('sectionRule');
+  var ruleTop = titleBottom + 26 + 34;
+  sectionRule.style.top = ruleTop + 'px';
+  var ruleH = sectionRule.getBoundingClientRect().height;
+
+  var stageTop = ruleTop + ruleH + 30;
   ['stage0', 'stage1', 'stage2'].forEach(function(id) {
     document.getElementById(id).style.top = stageTop + 'px';
   });
