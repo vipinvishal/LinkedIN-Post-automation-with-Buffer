@@ -46,6 +46,7 @@ PLATFORM_CHAR_LIMITS = {
     "x":        280,
 }
 PLATFORM = "linkedin"  # this pipeline posts to LinkedIn only
+TARGET_POST_LENGTH = 1300  # soft target for a short, scannable post — well under the 3000 hard cap
 
 # ── Content slot (set by workflow; defaults to 'news') ────────────────────────
 CONTENT_SLOT = os.environ.get("CONTENT_SLOT", "news")
@@ -105,23 +106,22 @@ Research from the web (ground your post in this real, current data):
 {research}
 
 ━━━ FORMAT: PROBLEM → SOLUTION ━━━
-Follow this exact structure:
-1. Start with the problem statement — a concrete, specific pain point tied to this topic. Make it
-   visceral, something the reader has actually run into.
-2. Emphasize the problem — go one level deeper on why it's worse than it looks, or what it costs people
-   who ignore it (wasted time, broken systems, wasted compute, bad user experience — be specific).
-3. Talk about the potential solution space in general terms before naming anything specific — build a
-   little anticipation.
-4. Introduce the specific technical solution as the answer — name the actual technique, architecture,
-   tool, or concept from the research/topic that solves the problem. It must be something that genuinely
-   fits this AI/tech topic (e.g. a real method, framework, or architectural pattern) — never a generic or
-   unrelated product name.
-5. Highlight 3-4 concrete features/capabilities of that solution that prove it actually solves the
-   problem from steps 1-2. Be specific and technical, not vague marketing language.
-6. Leave readers with a closing thought — one sharp, memorable line that reframes how they should think
-   about this problem going forward.
-7. Encourage readers to follow your profile for more content like this — one short, natural line (not
-   salesy).
+Follow this exact structure. Each numbered part is 1-2 short sentences MAX, not a paragraph:
+1. Opening hook — this line has to work standalone, before LinkedIn's "see more" cutoff (~49
+   characters). Lead with a concrete number from the research if one is strong enough (a stat hook
+   measurably outperforms everything else); otherwise lead with a specific, visceral pain point the
+   reader has actually run into. NEVER open with a command or imperative ("Stop doing X", "Here's how
+   to Y") — that style measurably kills engagement. It should read like an observation, not an order.
+2. Emphasize the problem — one line on why it's worse than it looks, or what it costs people who
+   ignore it. Don't repeat point 1 in different words.
+3. Name the specific technical solution directly — the actual technique, architecture, tool, or
+   concept from the research/topic that solves the problem. Skip the anticipation-building, go
+   straight to it. It must genuinely fit this AI/tech topic — never a generic or unrelated product name.
+4. Highlight exactly 3 concrete features/capabilities of that solution that prove it solves the
+   problem from steps 1-2. One line each. Specific and technical, not vague marketing language.
+5. One closing line that reframes how readers should think about this problem going forward.
+6. One short, natural line encouraging readers to follow your profile for more content like this
+   (not salesy).
 
 ━━━ WRITING RULES ━━━
 - Voice: first-person, one individual ENGINEER sharing what they ran into and figured out — NEVER "we",
@@ -132,10 +132,13 @@ Follow this exact structure:
 - No hype language ("game-changing", "revolutionary", "the future is here").
 - No bold/italic markdown, and never use "*" as a bullet marker anywhere — LinkedIn renders asterisks
   as literal characters, not formatting. Use "→" or a plain "-" for any bullet/list line instead.
-- Short, mobile-friendly lines — no long paragraphs.
+- Short, mobile-friendly lines — 1-2 sentences per paragraph, never more. No throat-clearing, no
+  restating the same point twice in different words.
 - No business/funding/company content — stay on the technology itself.
 - No hashtags.
-- Max 3000 characters TOTAL.
+- TARGET LENGTH: 900-1300 characters total. This is a post someone reads end-to-end in one glance while
+  scrolling, not an essay — every sentence must earn its place. 3000 characters is the hard ceiling, not
+  the goal.
 
 ━━━ OUTPUT ━━━
 Return ONLY valid JSON — no prose, no markdown fences, no explanation before or after:
@@ -165,23 +168,23 @@ Research from the web (ground your post in this real, current data):
 {research}
 
 ━━━ FORMAT: SCENARIO → RISK → SOLUTION ━━━
-Follow this exact structure:
-1. Start with an imaginary scenario — a short, vivid "Imagine..." or "Picture this..." moment that puts
-   the reader inside a real situation tied to this topic (a 2am pager alert, a demo breaking in front of
-   a customer, a model silently failing in production — whatever genuinely fits the topic).
-2. Highlight how critical this is for organizations and enterprises at scale — why this isn't just a
-   toy-project problem, but something that matters the moment real users or real systems are involved.
-3. Talk about a potential security, reliability, or failure risk connected to this scenario — be specific
-   about what actually goes wrong technically.
+Follow this exact structure. Each numbered part is 1-2 short sentences MAX except the bullets in step 5:
+1. Opening hook — this line has to work standalone, before LinkedIn's "see more" cutoff (~49
+   characters). Start with an imaginary scenario — a short, vivid "Imagine..." or "Picture this..."
+   moment that puts the reader inside a real situation tied to this topic (a 2am pager alert, a demo
+   breaking in front of a customer, a model silently failing in production — whatever genuinely fits
+   the topic). If the research has a strong concrete number, work it into this opening beat instead —
+   stat-driven hooks measurably outperform pure scenario-setting. Either way this must read as a
+   specific, vivid moment, never a command or imperative ("Stop doing X", "Here's how to Y").
+2. One line on why this matters at real scale — why it's not just a toy-project problem.
+3. One line naming the specific risk — what actually goes wrong technically. Don't repeat point 2.
 4. Introduce the solution — name the actual technique, architecture, tool, or concept from the
    research/topic that addresses this risk. It must genuinely fit this AI/tech topic — never a generic
    or unrelated product name.
-5. Cover the solution in exactly 5 short bullet points — specific, technical, no filler. Prefix each
-   bullet with "→ " (an arrow, not an asterisk or dash) — LinkedIn renders plain text only, and a literal
-   "*" shows up as a stray character instead of a bullet.
-6. End with one line on how game-changing this capability is — grounded and specific, not hype for
-   hype's sake.
-7. Conclude with a line that invites the audience into the comments — a sharp, specific question.
+5. Cover the solution in exactly 3 short bullet points — specific, technical, no filler, one line each.
+   Prefix each bullet with "→ " (an arrow, not an asterisk or dash) — LinkedIn renders plain text only,
+   and a literal "*" shows up as a stray character instead of a bullet.
+6. Conclude with a line that invites the audience into the comments — a sharp, specific question.
 
 ━━━ WRITING RULES ━━━
 - Voice: first-person, one individual ENGINEER, not a senior architect or expert lecturing from authority
@@ -190,13 +193,16 @@ Follow this exact structure:
   looked into, not confident textbook-style declarations. The imaginary scenario can be told in second
   person ("Imagine you...") or about a hypothetical team — that's a narrative device, not a claim about
   your own company.
-- No hype language beyond the one closing "game-changing" style line.
+- No hype language ("game-changing", "revolutionary" and similar).
 - No bold/italic markdown, and never use "*" as a bullet marker anywhere — LinkedIn renders asterisks
   as literal characters, not formatting. Use "→" or a plain "-" for any bullet/list line instead.
-- Short, mobile-friendly lines — no long paragraphs.
+- Short, mobile-friendly lines — 1-2 sentences per paragraph, never more. No throat-clearing, no
+  restating the same point twice in different words.
 - No business/funding/company content — stay on the technology itself.
 - No hashtags.
-- Max 3000 characters TOTAL.
+- TARGET LENGTH: 900-1300 characters total. This is a post someone reads end-to-end in one glance while
+  scrolling, not an essay — every sentence must earn its place. 3000 characters is the hard ceiling, not
+  the goal.
 
 ━━━ OUTPUT ━━━
 Return ONLY valid JSON — no prose, no markdown fences, no explanation before or after:
@@ -469,7 +475,26 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
 
     limit = PLATFORM_CHAR_LIMITS[PLATFORM]
 
-    # If over limit, ask the model to shorten (max 2 attempts, plain text only)
+    # Tighten toward the soft punchy-length target first (max 2 attempts, plain text only) —
+    # this runs even when well under the 3000 hard cap, since the goal is short, not just legal.
+    for shorten_attempt in range(2):
+        if len(post) <= TARGET_POST_LENGTH:
+            break
+        print(f"  Post is {len(post)} chars — tightening toward ~{TARGET_POST_LENGTH} (attempt {shorten_attempt + 1}/2)...")
+        shorten_prompt = (
+            f"This LinkedIn post is {len(post)} characters. Tighten it to roughly {TARGET_POST_LENGTH} "
+            f"characters (a bit under is fine) while keeping the hook, the strongest 2-3 points, and the "
+            f"closing line. Cut everything else — repeated ideas, weaker bullets, filler sentences.\n"
+            f"Plain text only — no markdown, no JSON wrapper.\n\n"
+            f"Original post:\n{post}\n\n"
+            f"Output ONLY the shortened post text. Nothing else."
+        )
+        post = generate_text(shorten_prompt, SYSTEM_PROMPT)
+        post = _re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', post)
+        post = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', post)
+        post = post.strip()
+
+    # If it's still over the real hard limit (rare after the tightening pass above), force it down
     for shorten_attempt in range(2):
         if len(post) <= limit:
             break
@@ -477,7 +502,7 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
         shorten_prompt = (
             f"This LinkedIn post is {len(post)} characters, over the {limit}-character limit.\n\n"
             f"Shorten it to strictly under {limit - 50} characters while keeping the hook, "
-            f"story, insights, CTA, and hashtags. Cut filler words, not ideas.\n"
+            f"story, insights, and CTA. Cut filler words, not ideas.\n"
             f"Plain text only — no markdown, no JSON wrapper.\n\n"
             f"Original post:\n{post}\n\n"
             f"Output ONLY the shortened post text. Nothing else."
@@ -621,6 +646,8 @@ If not, rewrite it again.
   those as literal characters, not formatting.
 * Do not add hashtags.
 * Do not spell out any URL or domain name.
+* The input is already written short and tight on purpose. Match its length or come in shorter —
+  never pad it out with extra sentences, examples, or commentary that weren't in the original.
 
 ### FINAL OUTPUT
 
