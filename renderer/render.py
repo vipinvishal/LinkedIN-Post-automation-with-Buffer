@@ -19,9 +19,10 @@ ROOT      = pathlib.Path(__file__).parent
 TEMPLATE  = "process_infographic.html.j2"
 OUTPUT    = ROOT / "output" / "infographic.png"
 
-# Canvas size for the (currently only) template.
+# Canvas size per template.
 _CANVAS_SIZES = {
-    "process_infographic.html.j2": (1080, 1410),
+    "process_infographic.html.j2":      (1080, 1410),
+    "process_infographic_dark.html.j2": (1080, 1410),
 }
 
 

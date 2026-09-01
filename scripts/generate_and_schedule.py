@@ -717,12 +717,19 @@ def humanize_post(post_text: str) -> str:
 # ══════════════════════════════════════════════════════════════════════════════
 
 INCLUDE_INFOGRAPHIC = os.environ.get("INCLUDE_INFOGRAPHIC", "1") == "1"
+# Dark outperforms light in-feed (stands out against LinkedIn's white UI) per current engagement
+# data — set INFOGRAPHIC_THEME=light to switch back without a code change.
+INFOGRAPHIC_THEME = os.environ.get("INFOGRAPHIC_THEME", "dark").strip().lower()
+_INFOGRAPHIC_TEMPLATE = (
+    "process_infographic_dark.html.j2" if INFOGRAPHIC_THEME == "dark" else "process_infographic.html.j2"
+)
 _PNG_PATH = os.path.join(_script_dir, "..", "renderer", "output", "infographic.png")
 
 
 def build_infographic(topic: str, post_text: str) -> str | None:
     """Generate infographic content (grounded in the actual post text) + render PNG using the
-    light-theme 'how it works' process template. Returns local PNG path, or None on failure."""
+    'how it works' process template, in the configured theme (dark by default). Returns local
+    PNG path, or None on failure."""
     if not INCLUDE_INFOGRAPHIC:
         return None
 
@@ -736,10 +743,10 @@ def build_infographic(topic: str, post_text: str) -> str | None:
         print("  [infographic] skipped — scripts.infographic not importable.")
         return None
 
-    print("[ Step 2.6 ] Generating infographic (synced to post, template: process/how-it-works)...")
+    print(f"[ Step 2.6 ] Generating infographic (synced to post, template: process/how-it-works, theme: {INFOGRAPHIC_THEME})...")
     try:
         content = ig.generate_process_content(topic, post_text, generate_text)
-        png     = ig.render_infographic(content, _PNG_PATH, template="process_infographic.html.j2")
+        png     = ig.render_infographic(content, _PNG_PATH, template=_INFOGRAPHIC_TEMPLATE)
         print(f"  Infographic rendered: {png}\n")
         return png
     except Exception as exc:
