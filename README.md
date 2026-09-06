@@ -1,6 +1,8 @@
 # LinkedIn Post Automation
 
-An AI agent that researches trending topics, generates engaging posts, and publishes them directly to LinkedIn — 4× every day.
+An AI agent that researches trending AI/ML topics, writes a short, hook-driven post in one engineer's
+learning-in-public voice, generates a matching infographic, and publishes both directly to LinkedIn —
+4× every day, fully unattended.
 
 **No VPS needed. No manual work. Fully automated via GitHub Actions.**
 
@@ -13,10 +15,16 @@ GitHub Actions (9 AM / 1 PM / 6 PM / 10 PM IST)
         ↓
 Exa — neural web research on a random AI/tech topic
         ↓
-Gemini — generates a viral, first-person post
+Gemini — generates a post using a hook formula from the hook matrix
   └─ fallback: Gemini key #2 → Euron API
         ↓
-LinkedIn API — publishes directly to your profile
+Gemini — humanizes the draft (strips AI-sounding tells, tightens length)
+        ↓
+Gemini + Playwright — generates a matching infographic (dark or light theme)
+        ↓
+LinkedIn API — publishes the post + infographic directly to your profile
+        ↓
+LinkedIn API — drops a topic-specific engagement comment (the author's own "first reply")
 ```
 
 ---
@@ -27,9 +35,10 @@ LinkedIn API — publishes directly to your profile
 |---|---|
 | **GitHub Actions** | 4× daily scheduling (replaces VPS/cron) |
 | **Exa** | Real-time neural web research |
-| **Google Gemini** | Post generation (dual-key with quota rotation) |
+| **Google Gemini** | Post generation, humanizing, and infographic content — dual-key with quota rotation, auto-falls-through if a model gets retired |
 | **Euron API** | Fallback when all Gemini keys are exhausted |
-| **LinkedIn UGC API** | Direct publishing to LinkedIn |
+| **Playwright + Jinja2** | Renders the infographic (HTML/CSS template → PNG) |
+| **LinkedIn UGC API** | Direct publishing of the post, image, and first comment |
 
 ---
 
@@ -48,6 +57,7 @@ cd LinkedIN-Post-automation
 python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+python -m playwright install chromium   # needed to render the infographic locally
 ```
 
 ### 3. Set up your `.env` file
@@ -61,12 +71,14 @@ Fill in your API keys (see [Configuration](#configuration) below).
 ### 4. Test locally before going live
 
 ```bash
-# Preview a generated post without posting to LinkedIn
+# Preview a generated post + infographic without posting to LinkedIn
 python scripts/generate_and_schedule.py --preview
 
-# Run the full pipeline (research → generate → post to LinkedIn)
+# Run the full pipeline (research → generate → humanize → infographic → post → comment)
 python scripts/generate_and_schedule.py
 ```
+
+The generated infographic is written to `renderer/output/infographic.png` on every run.
 
 ---
 
@@ -82,6 +94,12 @@ Add these to your `.env` file:
 | `EXA_API_KEY` | [exa.ai](https://exa.ai) | Yes |
 | `LINKEDIN_ACCESS_TOKEN` | Run `python scripts/get_linkedin_token.py` | Yes |
 | `LINKEDIN_PERSON_ID` | Run `python scripts/get_linkedin_token.py` | Yes |
+| `GEMINI_MODEL` | Overrides the default model (`gemini-flash-latest`) | Optional |
+| `INCLUDE_INFOGRAPHIC` | Set to `0` to skip infographic generation entirely | Optional (default `1`) |
+| `INFOGRAPHIC_THEME` | `dark` (default) or `light` | Optional |
+
+LinkedIn's OAuth token expires roughly every 60 days — when posting starts failing with a 401, re-run
+`python scripts/get_linkedin_token.py` and update the secret/env var.
 
 ---
 
@@ -110,7 +128,51 @@ The workflow is defined in `.github/workflows/daily_post.yml` and triggers 4× d
 | 10:00 PM | Advanced AI concept |
 
 You can also trigger it manually anytime:
-**GitHub repo → Actions → Daily LinkedIn Post → Run workflow**
+**GitHub repo → Actions → Daily LinkedIn Post → Run workflow** (check **preview** to test without publishing)
+
+---
+
+## Content Pipeline
+
+Every run follows the same six steps (see `scripts/generate_and_schedule.py::main()`):
+
+1. **Research** — Exa pulls 5 recent sources on a topic drawn from the active content slot.
+2. **Generate** — Gemini writes the post using one of two body structures (problem→solution or
+   scenario→risk→solution, alternated deterministically by day), with the opening line driven by
+   a formula picked from the [hook matrix](#hook-matrix). Target length: 900-1,300 characters —
+   short enough to read in one glance while scrolling, not an essay.
+3. **Humanize** — a second pass strips AI-sounding vocabulary, reveal-bridge phrasing, negative
+   parallelism, and manufactured sentence-rhythm tricks, without changing any fact, number, or claim.
+4. **Infographic** — Gemini turns the *same* post into structured "how it works" content (stages,
+   4 numbered steps, a closing hook), rendered to PNG via a Jinja2/Playwright template. Because it's
+   generated from the final post text, it's always in sync with whatever hook/topic that post used.
+5. **Post** — publishes the text + infographic directly via the LinkedIn UGC API.
+6. **Engagement comment** — drops a short, topic-specific comment (also model-generated, in the
+   author's voice) as the post's first reply, to seed discussion.
+
+### Hook Matrix
+
+`scripts/hook_matrix.py` is a library of scroll-stopping opener formulas built specifically for this
+persona (an individual engineer learning AI/ML in public — not a founder or business voice). It covers:
+
+- **Pattern interrupts** — e.g. "The Broken Assumption", "The Silent Change"
+- **Psychological triggers** — competence-gap, insider-knowledge, relatable-struggle, specificity-as-authority
+- **Curiosity gaps** — must resolve within ~210 characters (LinkedIn's "see more" cutoff), with a
+  banned-phrase list for manufactured-curiosity tells
+- **Power phrases** — grounded, first-person connective lines, offered as optional seasoning
+- **8 full hook structures** — Number-First Reveal, Time-Anchor Confession, Controlled A/B Anecdote,
+  Curiosity-Gap Teaser, Contrarian + Dated Receipts, Anecdote-Meets-Evidence Bridge, Explain-While-
+  Learning, False-Binary Dissolve
+
+`select_hook_formula()` rotates through the matrix deterministically (day-of-year + slot index), so
+every formula gets exercised evenly over time instead of clustering by chance.
+
+### Infographics
+
+Two themes live in `renderer/templates/`: `process_infographic_dark.html.j2` (default) and
+`process_infographic.html.j2` (light). Switch with `INFOGRAPHIC_THEME=light` — no code change needed.
+Both share the same layout (3-stage flow, 4 numbered cards, two "flow chip" summaries, a sticky-note
+pull-quote) and the same violet/amber/green/magenta accent system, just recolored for contrast.
 
 ---
 
@@ -121,8 +183,9 @@ Edit `scripts/topics.json` to change:
 - **`niche`** — the content category
 - **`persona`** — the voice and style of the posts
 - **`content_slots`** — topics and tones for each time slot
-- **`portfolio_url`** — if set, this URL is auto-posted as the first comment on every
-  published post (kept out of the post body so it doesn't suppress LinkedIn's organic reach)
+
+Edit `scripts/hook_matrix.py` to add, remove, or retune hook formulas — each entry has a `best_for`
+list of content slots it's tagged for.
 
 ---
 
@@ -130,12 +193,20 @@ Edit `scripts/topics.json` to change:
 
 ```
 ├── scripts/
-│   ├── generate_and_schedule.py   # main pipeline
+│   ├── generate_and_schedule.py   # main pipeline (research → generate → humanize → post → comment)
+│   ├── infographic.py             # infographic content generation + LinkedIn image upload
+│   ├── hook_matrix.py             # niche-specific hook formula library
 │   ├── topics.json                # niche, topics, tones, persona
-│   └── get_linkedin_token.py      # one-time helper to get LinkedIn tokens
+│   └── get_linkedin_token.py      # one-time / periodic helper to (re-)get LinkedIn tokens
+├── renderer/
+│   ├── render.py                  # Jinja2 → Playwright PNG renderer
+│   └── templates/
+│       ├── process_infographic.html.j2        # light theme
+│       └── process_infographic_dark.html.j2   # dark theme (default)
 ├── .github/
 │   └── workflows/
 │       └── daily_post.yml         # GitHub Actions workflow
+├── test_infographic.py            # exercises the live infographic-generation path
 ├── .env.example                   # template — copy to .env and fill in keys
 ├── requirements.txt               # Python dependencies
 └── .gitignore
@@ -145,13 +216,17 @@ Edit `scripts/topics.json` to change:
 
 ## Fallback Chain
 
-If Gemini hits its daily free-tier quota, the bot automatically falls back:
+If a model gets retired or a key hits its daily quota, the bot automatically falls through:
 
 ```
-Gemini key #1 → Gemini key #2 → Euron API (gemini-2.0-flash)
+gemini-flash-latest → gemini-3.6-flash → gemini-2.5-flash  (key #1)
+        → same model list on key #2
+        → Euron API (gemini-3.6-flash)
 ```
 
-No manual intervention needed.
+A 404 "model not found" (e.g. a future Gemini retirement) is treated the same as a quota error — it
+tries the next model automatically instead of failing the whole run. No manual intervention needed
+unless every fallback is exhausted, in which case the run fails loudly with a clear error.
 
 ---
 
