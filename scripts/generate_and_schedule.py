@@ -139,6 +139,15 @@ Follow this exact structure. Each numbered part is 1-2 short sentences MAX, not 
 - TARGET LENGTH: 900-1300 characters total. This is a post someone reads end-to-end in one glance while
   scrolling, not an essay — every sentence must earn its place. 3000 characters is the hard ceiling, not
   the goal.
+- NEVER open with a question (measurably the single worst opener). NEVER open with "Here's what/how/why"
+  or a "Stop X, start Y" line. NEVER bridge a reveal with "The result?" or "Plot twist:" — just state it.
+  NEVER announce candor ("Let me be honest", "Confession:", "unpopular opinion") without a specific,
+  dated fact right behind it — the fact alone is what earns the reaction, the announcement is a tell.
+- At most ONE contrast frame in the whole post ("it's not X, it's Y" or similar) — most posts should
+  use zero. At most ONE rule-of-three, and it must be three concrete numbers or named things, never
+  three interchangeable adjectives.
+- The closing question (if used) goes only at the very end, never earlier, and must name the specific
+  thing this post is about — never a generic "Thoughts?", "What do you think?", or "Agree or disagree?".
 
 ━━━ OUTPUT ━━━
 Return ONLY valid JSON — no prose, no markdown fences, no explanation before or after:
@@ -203,6 +212,15 @@ Follow this exact structure. Each numbered part is 1-2 short sentences MAX excep
 - TARGET LENGTH: 900-1300 characters total. This is a post someone reads end-to-end in one glance while
   scrolling, not an essay — every sentence must earn its place. 3000 characters is the hard ceiling, not
   the goal.
+- NEVER open with a question (measurably the single worst opener). NEVER open with "Here's what/how/why"
+  or a "Stop X, start Y" line. NEVER bridge a reveal with "The result?" or "Plot twist:" — just state it.
+  NEVER announce candor ("Let me be honest", "Confession:", "unpopular opinion") without a specific,
+  dated fact right behind it — the fact alone is what earns the reaction, the announcement is a tell.
+- At most ONE contrast frame in the whole post ("it's not X, it's Y" or similar) — most posts should
+  use zero. At most ONE rule-of-three, and it must be three concrete numbers or named things, never
+  three interchangeable adjectives.
+- The closing question goes only at the very end, never earlier, and must name the specific thing this
+  post is about — never a generic "Thoughts?", "What do you think?", or "Agree or disagree?".
 
 ━━━ OUTPUT ━━━
 Return ONLY valid JSON — no prose, no markdown fences, no explanation before or after:
@@ -555,8 +573,24 @@ Aggressively remove:
 * "Here's the thing..."
 * "The key takeaway is..."
 * "At the end of the day..."
-* "This isn't just X, it's Y"
-* "Not only X, but also Y"
+* "This isn't just X, it's Y", "X isn't Y, it's Z", "The real X isn't Y, it's Z", "Not X, but Y" — every
+  form of negative parallelism. If the post needs one such contrast to make its point, keep at most ONE
+  in the whole piece and rewrite it as two plain declarative sentences, not the "X, it's Y" template.
+* Reveal bridges: "The result?", "Plot twist:", "Spoiler:", "Here's what/how/why happened" — delete the
+  bridge and let the next sentence stand as a flat statement. It was the point anyway.
+* Generic closing lines: "What do you think?", "Thoughts?", "Agree or disagree?", "Let me know in the
+  comments", "Tag someone who needs this" — a closing question must name the specific thing this post
+  is about, not float free of it.
+* 2026 over-selected vocabulary (LLMs pick these 2-5x human rate — one is invisible, three in a
+  paragraph is a signature): significant, crucial, notably, particularly, comprehensive, insights,
+  robust, leverage, foster, landscape, nuanced, multifaceted, holistic, streamline, elevate, empower,
+  utilize, facilitate, harness, unlock, navigate, seamless, ecosystem. Replace with the plain word
+  (leverage→use, utilize→use, facilitate→help, streamline→simplify) or a real number where the vague
+  word was standing in for one ("significant growth" → "31% growth").
+* Present-participial clause openers ("Leveraging our data, we..." / "Building on this, ...") — put the
+  actor first instead: "We used our data to...".
+* Nominalisations that hide the actor ("the implementation of", "the utilization of") — use the verb:
+  "when we implemented" instead of "the implementation of".
 * Fake enthusiasm
 * Corporate/LinkedIn language
 * Unnecessary motivational language
@@ -565,7 +599,6 @@ Aggressively remove:
 * Excessive headings
 * Excessive bullet points
 * Artificial transitions
-* Overuse of em dashes
 * Overly polished sentences
 * Needless adjectives and adverbs
 * Repetitive sentence patterns
@@ -573,18 +606,21 @@ Aggressively remove:
 * Generic claims such as "This can revolutionize..."
 * Empty phrases that sound impressive but say nothing
 
+Em dashes are not a tell by themselves — zero em dashes in a post that wanted one is itself a sign of
+someone trying too hard to look human. Leave roughly one per 100 words; only trim the excess over that
+(3+ in a short post is the real tell), and never replace one with a period — that creates fragment
+stacking, which reads worse than the dash did.
+
 ### MAKE IT SOUND HUMAN
 
 Use:
 
 * Natural sentence lengths
-* Short sentences mixed with longer ones
 * Contractions where appropriate
 * Casual phrasing when the context allows it
 * Specific examples instead of vague claims
 * Opinions when the original writer clearly has one
 * Natural transitions
-* Slight imperfections in rhythm
 * Direct language
 * Concrete words
 * A conversational tone
@@ -594,6 +630,12 @@ Use:
 Don't make every sentence perfectly structured.
 
 Real people don't write like textbooks.
+
+Do NOT manufacture rhythm as a "sound human" tactic — deliberately mixing short punchy fragments with
+long sentences, or forcing a staccato "Short. Punchy. Done." run, is itself a detectable, learnable
+pattern once it's mechanical. Only fix a paragraph that reads genuinely machine-flat (four or more
+sentences all nearly the same length, no subordinate clause anywhere). If the input already reads like
+a person — one long sentence next to a short one here and there — leave its rhythm alone entirely.
 
 ### PRESERVE THE ORIGINAL THINKING
 
