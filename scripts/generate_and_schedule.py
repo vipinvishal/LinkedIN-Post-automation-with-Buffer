@@ -21,6 +21,7 @@ from exa_py import Exa
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
+from hook_matrix import select_hook_formula, POWER_PHRASES
 
 # ── Load env (local dev; GitHub Actions injects env vars directly) ────────────
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env"))
@@ -107,11 +108,11 @@ Research from the web (ground your post in this real, current data):
 
 ━━━ FORMAT: PROBLEM → SOLUTION ━━━
 Follow this exact structure. Each numbered part is 1-2 short sentences MAX, not a paragraph:
-1. Opening hook — this line has to work standalone, before LinkedIn's "see more" cutoff (~49
-   characters). Lead with a concrete number from the research if one is strong enough (a stat hook
-   measurably outperforms everything else); otherwise lead with a specific, visceral pain point the
-   reader has actually run into. NEVER open with a command or imperative ("Stop doing X", "Here's how
-   to Y") — that style measurably kills engagement. It should read like an observation, not an order.
+1. Opening hook — this line (and the 1-2 that follow it) has to work standalone, before LinkedIn's
+   "see more" cutoff (~210 characters). Use this exact hook formula: {hook_name}.
+   {hook_skeleton}
+   NEVER open with a command or imperative ("Stop doing X", "Here's how to Y") — that style
+   measurably kills engagement. It should read like an observation, not an order.
 2. Emphasize the problem — one line on why it's worse than it looks, or what it costs people who
    ignore it. Don't repeat point 1 in different words.
 3. Name the specific technical solution directly — the actual technique, architecture, tool, or
@@ -148,6 +149,8 @@ Follow this exact structure. Each numbered part is 1-2 short sentences MAX, not 
   three interchangeable adjectives.
 - The closing question (if used) goes only at the very end, never earlier, and must name the specific
   thing this post is about — never a generic "Thoughts?", "What do you think?", or "Agree or disagree?".
+- Optional power phrases you may use naturally, filled in with real specifics, if one genuinely fits
+  (never force one in, never use more than one per post): {power_phrases}
 
 ━━━ OUTPUT ━━━
 Return ONLY valid JSON — no prose, no markdown fences, no explanation before or after:
@@ -221,6 +224,8 @@ Follow this exact structure. Each numbered part is 1-2 short sentences MAX excep
   three interchangeable adjectives.
 - The closing question goes only at the very end, never earlier, and must name the specific thing this
   post is about — never a generic "Thoughts?", "What do you think?", or "Agree or disagree?".
+- Optional power phrases you may use naturally, filled in with real specifics, if one genuinely fits
+  (never force one in, never use more than one per post): {power_phrases}
 
 ━━━ OUTPUT ━━━
 Return ONLY valid JSON — no prose, no markdown fences, no explanation before or after:
@@ -439,7 +444,15 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
     use_style_2 = (day_of_year + slot_index) % 2 == 1
     template = STYLE_2_PROMPT if use_style_2 else STYLE_1_PROMPT
 
+    # STYLE_2 keeps its own built-in scenario cold-open (a hook formula in its own right).
+    # STYLE_1's opening line is driven by the hook matrix, rotating deterministically by
+    # day-of-year + slot so every formula gets exercised evenly over time.
+    hook = select_hook_formula(CONTENT_SLOT, day_of_year, slot_index)
+    power_phrases = "; ".join(POWER_PHRASES)
+
     print(f"[ Step 2 ] Generating post with Gemini... (style: {'2 (scenario/risk/solution)' if use_style_2 else '1 (problem/solution)'})")
+    if not use_style_2:
+        print(f"  Hook formula: {hook['id']} — {hook['name']}")
 
     prompt = template.format(
         persona=persona,
@@ -447,6 +460,9 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
         topic=topic,
         tone=tone,
         research=research[:2000],
+        hook_name=hook["name"],
+        hook_skeleton=hook["skeleton"],
+        power_phrases=power_phrases,
     )
 
     raw = generate_text(prompt, SYSTEM_PROMPT)
